@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NanoTips.Web", "NanoTips.Web\NanoTips.Web.csproj", "{541084B6-9A91-4576-A77E-4E8F69A51633}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NanoTips.Client", "NanoTips.Client\NanoTips.Client.csproj", "{AEA09869-D6F6-4EB6-A2C1-C3023E9550FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{541084B6-9A91-4576-A77E-4E8F69A51633}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{541084B6-9A91-4576-A77E-4E8F69A51633}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{541084B6-9A91-4576-A77E-4E8F69A51633}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEA09869-D6F6-4EB6-A2C1-C3023E9550FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEA09869-D6F6-4EB6-A2C1-C3023E9550FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEA09869-D6F6-4EB6-A2C1-C3023E9550FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEA09869-D6F6-4EB6-A2C1-C3023E9550FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
