@@ -1,7 +1,9 @@
 using MongoDB.Driver;
+using NanoTips.Services.WebhookData;
 using NanoTips.Web.Components.Settings;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+builder.Services.AddTransient<IWebhookDataService, WebhookDataService>();
 builder.Services.AddControllers();
 
 builder.Services.AddSingleton<MongoClient>(_ =>
