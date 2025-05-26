@@ -6,4 +6,19 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Hangfire" Version="1.8.20" />
+      <PackageReference Include="Hangfire.Dashboard.Management.v2" Version="2.3.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Reference Include="MongoDB.Bson">
+        <HintPath>..\..\..\..\..\.nuget\packages\mongodb.bson\3.4.0\lib\net6.0\MongoDB.Bson.dll</HintPath>
+      </Reference>
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\NanoTips.Services\NanoTips.Services.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -15,6 +15,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\NanoTips.Data\NanoTips.Data.csproj" />
+      <ProjectReference Include="..\NanoTips.Jobs\NanoTips.Jobs.csproj" />
       <ProjectReference Include="..\NanoTips.Services\NanoTips.Services.csproj" />
     </ItemGroup>
 

@@ -3,12 +3,15 @@ using Hangfire.Mongo;
 using Hangfire.Mongo.Migration.Strategies;
 using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
+using NanoTips.Jobs.Webhook;
 using NanoTips.Services.WebhookData;
 using NanoTips.Web.Components.Settings;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddTransient<IWebhookDataService, WebhookDataService>();
 builder.Services.AddControllers();
+
+builder.Services.AddTransient<DataSaverJob>();
 
 builder.Services.AddSingleton<MongoClient>(_ =>
 {
@@ -48,6 +51,6 @@ builder.Services.AddHangfire(config =>
 
 WebApplication app = builder.Build();
 app.UseHangfireServer();
-app.UseHangfireDashboard();
+app.UseHangfireDashboard("/hangfire", new DashboardOptions { IsReadOnlyFunc = _ => true });
 app.MapControllers();
 app.Run();

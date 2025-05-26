@@ -11,12 +11,10 @@ public class WebhookDataService(IMongoDatabase database) : IWebhookDataService
     /// Saves the incoming RAW webhook data to the database without any processing.
     /// </summary>
     /// <param name="data"></param>
-    public async Task SaveIncomingWebhookData(ObjectId id, Stream body)
+    public async Task SaveIncomingWebhookData(ObjectId id, string data)
     {
-        using StreamReader reader = new StreamReader(body);
-        string data = await reader.ReadToEndAsync();
-        if (string.IsNullOrEmpty(data))
-            throw new ArgumentException("Webhook data cannot be null or empty.", nameof(data));
+        ArgumentNullException.ThrowIfNull(id);
+        ArgumentException.ThrowIfNullOrEmpty(data);
 
         BsonDocument document = BsonSerializer.Deserialize<BsonDocument>(data);
         if (document == null)

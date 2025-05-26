@@ -8,5 +8,5 @@ public interface IWebhookDataService
     /// Saves the incoming RAW webhook data to the database without any processing.
     /// </summary>
     /// <param name="data"></param>
-    Task SaveIncomingWebhookData(ObjectId id, Stream body);
+    Task SaveIncomingWebhookData(ObjectId id, string data);
 }
