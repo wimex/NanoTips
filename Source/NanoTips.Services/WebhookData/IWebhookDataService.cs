@@ -9,4 +9,13 @@ public interface IWebhookDataService
     /// </summary>
     /// <param name="data"></param>
     Task SaveIncomingWebhookData(ObjectId id, string data);
+
+    /// <summary>
+    /// Creates a conversation message from an incoming webhook message.
+    /// </summary>
+    /// <param name="webhookMessageId"></param>
+    /// <param name="conversationId"></param>
+    /// <param name="conversationMessageId"></param>
+    /// <returns></returns>
+    Task CreateConversationFromMessage(ObjectId webhookMessageId, ObjectId conversationId, ObjectId conversationMessageId);
 }

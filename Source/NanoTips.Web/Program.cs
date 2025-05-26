@@ -4,6 +4,7 @@ using Hangfire.Mongo.Migration.Strategies;
 using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
 using NanoTips.Jobs.Webhook;
+using NanoTips.Services.OpenAi;
 using NanoTips.Services.WebhookData;
 using NanoTips.Web.Components.Settings;
 using OpenAI.Chat;
@@ -29,10 +30,16 @@ if (File.Exists(".env"))
     }
 }
 
-builder.Services.AddTransient<IWebhookDataService, WebhookDataService>();
-builder.Services.AddControllers();
+builder.Services
+    .AddTransient<IWebhookDataService, WebhookDataService>()
+    .AddTransient<IChatClientService, ChatClientService>();
 
-builder.Services.AddTransient<DataSaverJob>();
+builder.Services
+    .AddTransient<DataSaverJob>()
+    .AddTransient<DataCategorizerJob>();
+
+
+builder.Services.AddControllers();
 
 builder.Services.AddTransient<ChatClient>(provider =>
 {
@@ -82,6 +89,6 @@ builder.Services.AddHangfire(config =>
 
 WebApplication app = builder.Build();
 app.UseHangfireServer();
-app.UseHangfireDashboard("/hangfire", new DashboardOptions { IsReadOnlyFunc = _ => true });
+app.UseHangfireDashboard("/hangfire", new DashboardOptions { IsReadOnlyFunc = _ => !builder.Environment.IsDevelopment() });
 app.MapControllers();
 app.Run();

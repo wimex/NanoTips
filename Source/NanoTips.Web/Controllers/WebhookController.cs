@@ -9,7 +9,7 @@ using NanoTips.Web.Components.Controllers;
 
 namespace NanoTips.Web.Controllers;
 
-public class WebhookController(IServiceProvider serviceProvider, IBackgroundJobClient backgroundJobClient) : NanoTipsController
+public class WebhookController(ILogger<WebhookController> logger, IServiceProvider serviceProvider, IBackgroundJobClient backgroundJobClient) : NanoTipsController
 {
     /// <summary>
     /// Saves the incoming webhook data to the database and kicks off any necessary processing.
@@ -23,6 +23,9 @@ public class WebhookController(IServiceProvider serviceProvider, IBackgroundJobC
             return this.BadRequest("The incoming webhook data must be in JSON format.");
        
         ObjectId messageId = ObjectId.GenerateNewId();
+        ObjectId threadId = ObjectId.GenerateNewId();
+        ObjectId conversationId = ObjectId.GenerateNewId();
+        ObjectId outgoingId = ObjectId.GenerateNewId();
         
         using StreamReader reader = new StreamReader(this.Request.Body);
         string data = await reader.ReadToEndAsync();
@@ -34,12 +37,15 @@ public class WebhookController(IServiceProvider serviceProvider, IBackgroundJobC
         {
             IJobCancellationToken cancellationToken = new JobCancellationToken(false);
             DataSaverJob dataSaverJob = serviceProvider.GetRequiredService<DataSaverJob>();
+            DataCategorizerJob dataCategorizerJob = serviceProvider.GetRequiredService<DataCategorizerJob>();
 
             string dataSaverJobId = backgroundJobClient
-                .Enqueue(() => dataSaverJob.Execute(messageId, data, cancellationToken));
+                .Enqueue(() => dataSaverJob.Execute(messageId.ToString(), data, cancellationToken));
 
-            string messageCategorizerJobId = backgroundJobClient
-                .ContinueJobWith(dataSaverJobId, () => dataSaverJob.Execute(messageId, data, cancellationToken), JobContinuationOptions.OnlyOnSucceededState);
+            string dataCategorizerJobId = backgroundJobClient
+                .ContinueJobWith(dataSaverJobId, () => dataCategorizerJob.Execute(messageId.ToString(), threadId.ToString(), conversationId.ToString(), cancellationToken), JobContinuationOptions.OnlyOnSucceededState);
+
+            logger.LogInformation("Incoming message processing started: {DataSaverJobId} => {DataCategorizerJobId}", dataSaverJobId, dataCategorizerJobId);
         });
 
         return this.Ok("Your data is being processed.");
