@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NanoTips.Data", "NanoTips.D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NanoTips.Services", "NanoTips.Services\NanoTips.Services.csproj", "{52BC2320-A66A-469F-A6F1-4047019EFA77}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NanoTips.Jobs", "NanoTips.Jobs\NanoTips.Jobs.csproj", "{039739E6-D39C-427D-9F0E-6B84895DCE4A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{52BC2320-A66A-469F-A6F1-4047019EFA77}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{52BC2320-A66A-469F-A6F1-4047019EFA77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{52BC2320-A66A-469F-A6F1-4047019EFA77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{039739E6-D39C-427D-9F0E-6B84895DCE4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{039739E6-D39C-427D-9F0E-6B84895DCE4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{039739E6-D39C-427D-9F0E-6B84895DCE4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{039739E6-D39C-427D-9F0E-6B84895DCE4A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

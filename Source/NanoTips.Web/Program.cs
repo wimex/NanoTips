@@ -1,3 +1,7 @@
+using Hangfire;
+using Hangfire.Mongo;
+using Hangfire.Mongo.Migration.Strategies;
+using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
 using NanoTips.Services.WebhookData;
 using NanoTips.Web.Components.Settings;
@@ -19,6 +23,31 @@ builder.Services.AddSingleton<IMongoDatabase>(provider =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
+builder.Services.AddHangfireServer(options =>
+{
+    options.ServerName = "NanoTips";
+});
+
+builder.Services.AddHangfire(config =>
+{
+    MongoDbSettings settings = builder.Configuration.GetSection(MongoDbSettings.SectionName).Get<MongoDbSettings>();
+    string server = $"{settings.ConnectionUri}/{settings.DatabaseName}?authSource=admin";
+
+    config
+        .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+        .UseSimpleAssemblyNameTypeSerializer()
+        .UseRecommendedSerializerSettings()
+        .UseMongoStorage(server, new MongoStorageOptions
+        {
+            MigrationOptions = new(){MigrationStrategy = new MigrateMongoMigrationStrategy(), BackupStrategy = new CollectionMongoBackupStrategy()},
+            Prefix = "hangfire",
+            CheckConnection = true,
+            CheckQueuedJobsStrategy = CheckQueuedJobsStrategy.Poll,
+        });
+});
+
 WebApplication app = builder.Build();
+app.UseHangfireServer();
+app.UseHangfireDashboard();
 app.MapControllers();
 app.Run();
