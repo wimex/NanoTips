@@ -8,6 +8,26 @@ using NanoTips.Services.WebhookData;
 using NanoTips.Web.Components.Settings;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+if (File.Exists(".env"))
+{
+    foreach (string line in File.ReadAllLines(".env"))
+    {
+        if (line.StartsWith("#") || string.IsNullOrWhiteSpace(line))
+            continue;
+
+        string[] parts = line.Split('=', 2, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length != 2)
+            continue;
+        
+        string part1 = parts[0].Trim();
+        string part2 = parts[1].Trim();
+        if(string.IsNullOrEmpty(part1) || string.IsNullOrEmpty(part2))
+            continue;
+        
+        builder.Configuration[part1] = part2;
+    }
+}
+
 builder.Services.AddTransient<IWebhookDataService, WebhookDataService>();
 builder.Services.AddControllers();
 
