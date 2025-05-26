@@ -11,6 +11,7 @@
         <PackageReference Include="Hangfire.Mongo" Version="1.11.6" />
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.0"/>
         <PackageReference Include="MongoDB.Driver" Version="3.4.0" />
+        <PackageReference Include="OpenAI" Version="2.1.0" />
     </ItemGroup>
 
     <ItemGroup>

@@ -2,7 +2,7 @@ namespace NanoTips.Data;
 
 public static class NanoTipsCollections
 {
-    public const string Messages = "webhook.messages";
-    public const string Threads = "conversations.threads";
-    public const string Articles = "knowledgebase.articles";
+    public const string WebhookMessages = "webhook.messages";
+    public const string ConversationMessages = "conversation.messages";
+    public const string KnowledgeBaseArticles = "knowledgebase.articles";
 }

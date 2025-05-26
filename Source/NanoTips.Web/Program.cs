@@ -6,6 +6,7 @@ using MongoDB.Driver;
 using NanoTips.Jobs.Webhook;
 using NanoTips.Services.WebhookData;
 using NanoTips.Web.Components.Settings;
+using OpenAI.Chat;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 if (File.Exists(".env"))
@@ -32,6 +33,16 @@ builder.Services.AddTransient<IWebhookDataService, WebhookDataService>();
 builder.Services.AddControllers();
 
 builder.Services.AddTransient<DataSaverJob>();
+
+builder.Services.AddTransient<ChatClient>(provider =>
+{
+    IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
+    string? token = configuration["OPENAI_API_KEY"];
+    if (string.IsNullOrEmpty(token))
+        throw new InvalidOperationException("OpenAI API key is not configured.");
+
+    return new ChatClient("gpt-4o", token);
+});
 
 builder.Services.AddSingleton<MongoClient>(_ =>
 {
