@@ -4,6 +4,7 @@ using Hangfire.Mongo.Migration.Strategies;
 using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
 using NanoTips.Jobs.Webhook;
+using NanoTips.Services.EmailResponder;
 using NanoTips.Services.OpenAi;
 using NanoTips.Services.WebhookData;
 using NanoTips.Web.Components.Settings;
@@ -32,7 +33,8 @@ if (File.Exists(".env"))
 
 builder.Services
     .AddTransient<IWebhookDataService, WebhookDataService>()
-    .AddTransient<IChatClientService, ChatClientService>();
+    .AddTransient<IChatClientService, ChatClientService>()
+    .AddTransient<IEmailResponderService, EmailResponderService>();
 
 builder.Services
     .AddTransient<DataSaverJob>()

@@ -34,6 +34,11 @@ public record ConversationMessage
     public string? CategoryId { get; init; }
     
     /// <summary>
+    /// Contains suggestions for categories with their probabilities.
+    /// </summary>
+    public Dictionary<string, double> CategorySuggestions { get; set; } = new();
+    
+    /// <summary>
     /// The sender of the message (e-mail address)
     /// </summary>
     public required string Sender { get; init; }

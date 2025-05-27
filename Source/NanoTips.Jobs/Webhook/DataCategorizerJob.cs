@@ -4,6 +4,7 @@ using Hangfire.Dashboard.Management.v2.Support;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
+using NanoTips.Services.EmailResponder;
 using NanoTips.Services.OpenAi;
 using NanoTips.Services.WebhookData;
 
@@ -24,12 +25,12 @@ public class DataCategorizerJob(IServiceProvider serviceProvider) : IJob
         
         ILogger<DataCategorizerJob> logger = serviceProvider.GetRequiredService<ILogger<DataCategorizerJob>>();
         IWebhookDataService webhookDataService = serviceProvider.GetRequiredService<IWebhookDataService>();
-        IChatClientService chatClientService = serviceProvider.GetRequiredService<IChatClientService>();
+        IEmailResponderService emailResponderService = serviceProvider.GetRequiredService<IEmailResponderService>();
 
         logger.LogInformation("Starting categorization for webhook message {WebhookMessageId} to conversation {ConversationId}", webhookMessageId, conversationId);
         await webhookDataService.CreateConversationFromMessage(ObjectId.Parse(webhookMessageId), ObjectId.Parse(conversationId), ObjectId.Parse(conversationMessageId));
         
         logger.LogInformation("Created conversation message {ConversationMessageId} for webhook message {WebhookMessageId}", conversationMessageId, webhookMessageId);
-        await chatClientService.GetEmailCategory(ObjectId.Parse(conversationMessageId));
+        await emailResponderService.TryRespondingToMail(ObjectId.Parse(conversationMessageId));
     }
 }
