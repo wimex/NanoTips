@@ -1,6 +1,10 @@
 using System.Collections.Concurrent;
+using System.Dynamic;
 using System.Net.WebSockets;
+using System.Reflection;
 using System.Text.Json;
+using Microsoft.Extensions.DependencyInjection;
+using NanoTips.Services.ConversationManager;
 using NanoTips.Services.Enums;
 using NanoTips.Services.Models;
 
@@ -44,6 +48,7 @@ public class WebsocketHandlerService(IServiceProvider serviceProvider) : IWebsoc
         Connections.TryRemove(connectionId, out WebSocket _);
     }
     
+    //TODO: fix hint pathes
     private async Task ReceiveMessage(string connectionId, string content)
     {
         WebsocketMessageModel message = JsonSerializer.Deserialize<WebsocketMessageModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
@@ -52,11 +57,26 @@ public class WebsocketHandlerService(IServiceProvider serviceProvider) : IWebsoc
             case MessageType.GetConversations:
                 ThreadPool.QueueUserWorkItem(_ =>
                 {
-                    // Get messages and send response
+                    IServiceScope scope = serviceProvider.CreateScope();
+                    IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
+                    
+                    IList<ConversationListModel> conversations = conversationManager.GetConversations().Result;
+                    this.SendMessage(connectionId, MessageType.GetConversations, conversations).Wait();
                 });
                 break;
             default:
                 throw new NotSupportedException($"Message type {message.Type} is not supported.");
         }
+    }
+    
+    private async Task SendMessage<T>(string connectionId, MessageType type, T content)
+    {
+        if (!Connections.TryGetValue(connectionId, out WebSocket socket))
+            throw new InvalidOperationException("Unable to locate connection");
+
+        string json = JsonSerializer.Serialize(content, JsonOptions);
+        byte[] buffer = System.Text.Encoding.UTF8.GetBytes(json);
+        
+        await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
     }
 }
