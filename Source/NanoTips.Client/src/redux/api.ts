@@ -1,4 +1,5 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
+import {ws} from "@/redux/socket.ts";
 
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
@@ -10,18 +11,23 @@ export const api = createApi({
             async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved}) {
                 console.log(`Running getMessages: ${arg}`);
                 
+                function onMessageReceived() {
+                    console.log(`Message received: ${arg}`);
+                    
+                    updateCachedData((draft) => {
+                        draft.push(arg);
+                    });
+                }
+                
                 try {
                     await cacheDataLoaded;
                     console.log(`getMessages cache data loaded: ${arg}`);
                     
-                    // Simulate a delay to mimic fetching data
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    updateCachedData(draft => {
-                        console.log(`Updating cached data for getMessages: ${arg}`);
-                        draft.push(`Message ${draft.length + 1} for ${arg}`);
-                    });
+                    ws.addEventListener('message', onMessageReceived);
                 } finally {
                     await cacheEntryRemoved;
+                    ws.removeEventListener('message', onMessageReceived);
+                    
                     console.log(`getMessages cache entry removed: ${arg}`);
                 }
             },
