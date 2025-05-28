@@ -1,35 +1,37 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import styles from './App.module.scss';
+import {useState} from "react";
 
 function App() {
-  const [count, setCount] = useState(0)
+    const [tab, setTab] = useState<string>('messages');
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    return (
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <div className={styles.logo}>
+                    <h1>NanoTips</h1>
+                </div>
+                <div className={styles.menu}>
+                    <div className={styles.tabs}>
+                        <Tabs defaultValue="messages" onValueChange={(v: string) => setTab(v)}>
+                            <TabsList>
+                                <TabsTrigger value="messages" className="text-lg">Messages</TabsTrigger>
+                                <TabsTrigger value="articles" className="text-lg">Articles</TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+                </div>
+            </div>
+            <div className={styles.content}>
+                <div className={styles.sidebar}>
+                    {tab === 'messages' ? (<div>messages</div>) : (<div>articles</div>)}
+                </div>
+                <div className={styles.main}>
+                    {tab === 'messages' ? (<div>messages</div>) : (<div>articles</div>)}
+                </div>
+            </div>
+        </div>
+    )
 }
 
 export default App

@@ -1,0 +1,47 @@
+.container {
+  width: 100vw;
+  height: 100vh;
+  padding: 0.4rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 4rem 1fr;
+  grid-template-areas: 
+          "header" 
+          "content";
+  
+  .header {
+    line-height: 4rem;
+    display: grid;
+    grid-template-columns: 300px auto;
+    grid-template-rows: 1fr;
+    grid-template-areas: "logo menu";
+    border-bottom: 1px solid black;
+    
+    .logo {
+      font-size: 2rem;
+      grid-area: logo;
+    }
+
+    .menu {
+      grid-area: menu;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+  
+  .content {
+    display: grid;
+    grid-template-columns: 300px auto;
+    grid-template-rows: 1fr;
+    grid-template-areas: "sidebar main";
+    
+    .sidebar {
+      grid-area: sidebar;
+    }
+    
+    .main {
+      grid-area: main;
+    }
+  }
+}
