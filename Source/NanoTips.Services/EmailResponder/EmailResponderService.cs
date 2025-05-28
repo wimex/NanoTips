@@ -42,10 +42,16 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
         }
         
         logger.LogInformation("Category '{Category}' selected for message {MessageId} with probability {Probability}.", category, messageId, categories[category]);
-        KnowledgeBaseArticle article = await database
+        KnowledgeBaseArticle? article = await database
             .GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles)
             .Find(article => article.Slug == category)
             .FirstOrDefaultAsync();
+
+        if (article is null || string.IsNullOrEmpty(article.Body))
+        {
+            logger.LogWarning("No knowledge base article found for category '{Category}' in message {MessageId}.", category, messageId);
+            return;
+        }
         
         ConversationMessage reply = new()
         {
