@@ -4,12 +4,12 @@ import {ws} from "@/redux/socket.ts";
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
     endpoints: (builder) => ({
-        getMessages: builder.query<string[], string>({
+        getConversations: builder.query<string[], string>({
             queryFn() {
                 return { data: [] };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved}) {
-                console.log(`Running getMessages: ${arg}`);
+                console.log(`Running getConversations: ${arg}`);
                 
                 function onMessageReceived() {
                     console.log(`Message received: ${arg}`);
@@ -21,14 +21,14 @@ export const api = createApi({
                 
                 try {
                     await cacheDataLoaded;
-                    console.log(`getMessages cache data loaded: ${arg}`);
+                    console.log(`getConversations cache data loaded: ${arg}`);
                     
-                    ws.addEventListener('message', onMessageReceived);
+                    ws.addMessageListener('getConversations', onMessageReceived);
                 } finally {
                     await cacheEntryRemoved;
-                    ws.removeEventListener('message', onMessageReceived);
+                    ws.removeMessageListener('getConversations', onMessageReceived);
                     
-                    console.log(`getMessages cache entry removed: ${arg}`);
+                    console.log(`getConversations cache entry removed: ${arg}`);
                 }
             },
         }),
@@ -36,5 +36,5 @@ export const api = createApi({
 });
 
 export const {
-    useGetMessagesQuery,
+    useGetConversationsQuery,
 } = api;

@@ -1,9 +1,14 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import styles from './App.module.scss';
-import {useState} from "react";
+import {useEffect, useState} from "react";
+import {ws} from "@/redux/socket.ts";
 
 function App() {
     const [tab, setTab] = useState<string>('messages');
+
+    useEffect(() => {
+        ws.sendMessage<'getConversations'>({type: 'getConversations', conversations: []});
+    }, []);
     
     return (
         <div className={styles.container}>

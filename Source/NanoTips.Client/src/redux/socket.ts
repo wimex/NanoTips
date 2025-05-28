@@ -1,24 +1,47 @@
+import {
+    type EnvelopeTypes,
+    type GetConversationsMessage,
+    type ListenerTypes,
+    type MessageTypes
+} from "@/models/socket.models";
 
 class WebSocketClass
 {
-    private url: string = 'http://localhost:3000';
+    private url: string = 'http://localhost:5245/ws';
     private ws: WebSocket | null = null;
     
     private listeners = {
         open: [] as Array<() => void>,
-        message: [] as Array<(event: MessageEvent) => void>,
+        message: {
+            none: [] as Array<(message: GetConversationsMessage) => void>,
+            getConversations: [] as Array<(message: GetConversationsMessage) => void>,
+        } as Record<MessageTypes, Array<ListenerTypes<MessageTypes>>>,
         close: [] as Array<() => void>,
         error: [] as Array<(error: Event) => void>,
     }
     
-    public addEventListener(event: 'open' | 'message' | 'close' | 'error', listener: any): void {
-        this.listeners[event].push(listener);
-        console.log(`Listener added for event: ${event} - Total listeners: ${this.listeners[event].length}`);
+    public sendMessage<T extends MessageTypes>(message: EnvelopeTypes<T>): void {
+        const json = JSON.stringify(message);
+        if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+            this.ws.send(json);
+            console.log('WebSocket message sent:', json);
+        } else {
+            console.error('WebSocket is not open. Cannot send message:', json);
+            setTimeout(() => {
+                this.sendMessage(message);
+            }, 1000);
+        }
     }
     
-    public removeEventListener(event: 'open' | 'message' | 'close' | 'error', listener: any): void {
-        this.listeners[event].splice(this.listeners[event].indexOf(listener), 1);
-        console.log(`Listener removed for event: ${event} - Remaining listeners: ${this.listeners[event].length}`);
+    public addMessageListener<T extends MessageTypes>(type: MessageTypes, listener: ListenerTypes<T>): void {
+        this.listeners.message[type].push(listener);
+    }
+    
+    public removeMessageListener<T extends MessageTypes>(type: MessageTypes, listener: ListenerTypes<T>): void {
+        const index = this.listeners.message[type].indexOf(listener);
+        if (index !== -1) {
+            this.listeners.message[type].splice(index, 1);
+        }
     }
     
     public initialize(): void {
@@ -33,8 +56,14 @@ class WebSocketClass
         
         this.ws.addEventListener('message', (event) => {
             console.log('WebSocket message received:', event.data);
-            for (const listener of this.listeners.message) {
-                listener(event);
+            
+            const message: GetConversationsMessage = JSON.parse(event.data);
+            if (message && message.type) {
+                for (const listener of this.listeners.message[message.type]) {
+                    listener(message);
+                }
+            } else {
+                console.warn('Received message with unknown type:', message);
             }
         });
         

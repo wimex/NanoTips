@@ -7,6 +7,7 @@ using NanoTips.Jobs.Webhook;
 using NanoTips.Services.EmailResponder;
 using NanoTips.Services.OpenAi;
 using NanoTips.Services.WebhookData;
+using NanoTips.Services.WebsocketHandler;
 using NanoTips.Web.Components.Settings;
 using OpenAI.Chat;
 
@@ -34,7 +35,8 @@ if (File.Exists(".env"))
 builder.Services
     .AddTransient<IWebhookDataService, WebhookDataService>()
     .AddTransient<IChatClientService, ChatClientService>()
-    .AddTransient<IEmailResponderService, EmailResponderService>();
+    .AddTransient<IEmailResponderService, EmailResponderService>()
+    .AddTransient<IWebsocketHandlerService, WebsocketHandlerService>();
 
 builder.Services
     .AddTransient<DataSaverJob>()
@@ -90,6 +92,9 @@ builder.Services.AddHangfire(config =>
 });
 
 WebApplication app = builder.Build();
+app.UseWebSockets();
+
+
 app.UseHangfireServer();
 app.UseHangfireDashboard("/hangfire", new DashboardOptions { IsReadOnlyFunc = _ => !builder.Environment.IsDevelopment() });
 app.MapControllers();
