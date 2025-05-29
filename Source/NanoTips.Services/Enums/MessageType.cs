@@ -7,6 +7,12 @@ public enum MessageType
     [EnumMember(Value = "none")]
     None = 0,
     
+    [EnumMember(Value = "reqConversations")]
+    ReqConversations = 1,
+    
+    [EnumMember(Value = "reqConversation")]
+    ReqConversation = 2,
+    
     [EnumMember(Value = "getConversations")]
-    GetConversations = 1,
+    GetConversations = 3,
 }

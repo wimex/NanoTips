@@ -1,13 +1,18 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import styles from './App.module.scss';
 import {useEffect, useState} from "react";
-import {ws} from "@/redux/socket.ts";
+import {useReqConversationMutation, useReqConversationsMutation} from "@/redux/api.ts";
 
 function App() {
     const [tab, setTab] = useState<string>('messages');
-
+    const [reqConversations] = useReqConversationsMutation();
+    const [reqConversation] = useReqConversationMutation();
+    
     useEffect(() => {
-        ws.sendMessage<'getConversations'>({type: 'getConversations', conversations: []});
+        (async () => {
+            await reqConversations();
+            await reqConversation({ conversationId: 'test-conversation' });
+        })();
     }, []);
     
     return (

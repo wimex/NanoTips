@@ -12,12 +12,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Reference Include="MongoDB.Bson">
-        <HintPath>..\..\..\..\..\.nuget\packages\mongodb.bson\3.4.0\lib\net6.0\MongoDB.Bson.dll</HintPath>
-      </Reference>
-    </ItemGroup>
-
-    <ItemGroup>
       <ProjectReference Include="..\NanoTips.Services\NanoTips.Services.csproj" />
     </ItemGroup>
 

@@ -1,16 +1,15 @@
 using System.Collections.Concurrent;
-using System.Dynamic;
 using System.Net.WebSockets;
-using System.Reflection;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using NanoTips.Services.ConversationManager;
 using NanoTips.Services.Enums;
 using NanoTips.Services.Models;
 
 namespace NanoTips.Services.WebsocketHandler;
 
-public class WebsocketHandlerService(IServiceProvider serviceProvider) : IWebsocketHandlerService
+public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IServiceProvider serviceProvider) : IWebsocketHandlerService
 {
     private static JsonSerializerOptions JsonOptions { get; } = new()
     {
@@ -41,20 +40,19 @@ public class WebsocketHandlerService(IServiceProvider serviceProvider) : IWebsoc
             closed = result.CloseStatus.HasValue;
             
             string message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
-            this.ReceiveMessage(connectionId, message);
+            await this.ReceiveMessage(connectionId, message);
         }
 
         await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
         Connections.TryRemove(connectionId, out WebSocket _);
     }
     
-    //TODO: fix hint pathes
     private async Task ReceiveMessage(string connectionId, string content)
     {
-        WebsocketMessageModel message = JsonSerializer.Deserialize<WebsocketMessageModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
-        switch (message.Type)
+        WebsocketEnvelopeModel envelope = JsonSerializer.Deserialize<WebsocketEnvelopeModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
+        switch (envelope.Type)
         {
-            case MessageType.GetConversations:
+            case MessageType.ReqConversations:
                 ThreadPool.QueueUserWorkItem(_ =>
                 {
                     IServiceScope scope = serviceProvider.CreateScope();
@@ -65,7 +63,8 @@ public class WebsocketHandlerService(IServiceProvider serviceProvider) : IWebsoc
                 });
                 break;
             default:
-                throw new NotSupportedException($"Message type {message.Type} is not supported.");
+                logger.LogError($"Received unsupported message type: {envelope.Type}");
+                return;
         }
     }
     
@@ -74,7 +73,13 @@ public class WebsocketHandlerService(IServiceProvider serviceProvider) : IWebsoc
         if (!Connections.TryGetValue(connectionId, out WebSocket socket))
             throw new InvalidOperationException("Unable to locate connection");
 
-        string json = JsonSerializer.Serialize(content, JsonOptions);
+        WebsocketEnvelopeModel envelope = new WebsocketEnvelopeModel
+        {
+            Type = type,
+            Data = JsonSerializer.SerializeToNode(content, JsonOptions)
+        };
+        
+        string json = JsonSerializer.Serialize(envelope, JsonOptions);
         byte[] buffer = System.Text.Encoding.UTF8.GetBytes(json);
         
         await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);

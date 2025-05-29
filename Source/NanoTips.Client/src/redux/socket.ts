@@ -1,8 +1,7 @@
 import {
     type EnvelopeTypes,
-    type GetConversationsMessage,
     type ListenerTypes,
-    type MessageTypes
+    type MessageTypes, type WebsocketEnvelopeModel, type WebsocketEnvelopeModelTyped
 } from "@/models/socket.models";
 
 class WebSocketClass
@@ -12,23 +11,22 @@ class WebSocketClass
     
     private listeners = {
         open: [] as Array<() => void>,
-        message: {
-            none: [] as Array<(message: GetConversationsMessage) => void>,
-            getConversations: [] as Array<(message: GetConversationsMessage) => void>,
-        } as Record<MessageTypes, Array<ListenerTypes<MessageTypes>>>,
+        message: {} as Record<MessageTypes, Array<ListenerTypes<MessageTypes>>>,
         close: [] as Array<() => void>,
         error: [] as Array<(error: Event) => void>,
     }
     
-    public sendMessage<T extends MessageTypes>(message: EnvelopeTypes<T>): void {
-        const json = JSON.stringify(message);
+    public sendMessage<T extends MessageTypes>(type: MessageTypes, message: EnvelopeTypes<T>): void {
+        const data: WebsocketEnvelopeModelTyped<T> = { type: type, data: message };
+        const json = JSON.stringify(data);
+        
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(json);
             console.log('WebSocket message sent:', json);
         } else {
             console.error('WebSocket is not open. Cannot send message:', json);
             setTimeout(() => {
-                this.sendMessage(message);
+                this.sendMessage(type, message);
             }, 1000);
         }
     }
@@ -57,10 +55,17 @@ class WebSocketClass
         this.ws.addEventListener('message', (event) => {
             console.log('WebSocket message received:', event.data);
             
-            const message: GetConversationsMessage = JSON.parse(event.data);
+            const typecheck = JSON.parse(event.data) as WebsocketEnvelopeModel;
+            if (!typecheck || !typecheck.type) {
+                console.warn('Received message with no type:', event.data);
+                return;
+            }
+            
+            const message = JSON.parse(event.data) as WebsocketEnvelopeModelTyped<typeof typecheck.type>;
             if (message && message.type) {
-                for (const listener of this.listeners.message[message.type]) {
-                    listener(message);
+                const listeners = this.listeners.message[message.type] as ListenerTypes<typeof message.type>[];
+                for (const listener of listeners) {
+                    listener(message.data);
                 }
             } else {
                 console.warn('Received message with unknown type:', message);
