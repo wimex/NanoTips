@@ -28,18 +28,15 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
             .OrderByDescending(c => c.Value)
             .Select(c => c.Key)
             .FirstOrDefault();
+        
+        logger.LogInformation("Suggested categories for message {MessageId}: {Categories}", messageId, string.Join(", ", categories.Select(c => $"{c.Key} ({c.Value:P2})")));
+        await database
+            .GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages)
+            .UpdateOneAsync(m => m.Id == messageId, Builders<ConversationMessage>.Update.Set(m => m.CategorySuggestions, categories));
 
         if (string.IsNullOrEmpty(category))
         {
             logger.LogInformation("No suitable category found for message {MessageId}. No response will be sent.", messageId);
-            message.CategorySuggestions = categories;
-            
-            await database
-                .GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages)
-                .UpdateOneAsync(m => m.Id == messageId, Builders<ConversationMessage>.Update.Set(m => m.CategorySuggestions, categories));
-            
-            
-            
             return;
         }
         
