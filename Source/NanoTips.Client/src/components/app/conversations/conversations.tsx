@@ -1,13 +1,9 @@
 import {useGetConversationsQuery, useReqConversationsMutation} from "@/redux/api.ts";
-import {useEffect, useState} from "react";
-import type {ConversationListModel} from "@/models/conversations.model.tsx";
+import {useEffect} from "react";
 
-export default function Conversations() {
-    const [ conversations, setConversations ] = useState<ConversationListModel[]>([]);
-    
+export default function Conversations({ onConversationIdChanged }: { onConversationIdChanged: (conversationId: string) => void }) {
     const [reqConversations] = useReqConversationsMutation();
     const getConversations = useGetConversationsQuery();
-    console.log('RENDER conversations', getConversations.data);
 
     useEffect(() => {
         (async () => {
@@ -17,8 +13,8 @@ export default function Conversations() {
     
     return (<div>
         {getConversations.data?.map((conversation) => (
-            <div key={conversation.conversationId} className="p-2 border-b border-gray-200 hover:bg-gray-100 cursor-pointer">
-                <h3 className="text-lg font-semibold">{conversation.subject}</h3>
+            <div key={conversation.conversationId} className="p-2 border-b border-gray-200 hover:bg-gray-100 cursor-pointer" onClick={() => onConversationIdChanged(conversation.conversationId)}>
+                <h3 className="text-sm font-semibold">{conversation.subject}</h3>
             </div>
         ))}
     </div>);

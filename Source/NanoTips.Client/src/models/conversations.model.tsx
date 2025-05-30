@@ -10,7 +10,8 @@ export type GetConversationRequest = {
     conversationId: string;
 }
 
-export type GetConversationResponse = {
+export type ConversationViewModel = {
     conversationId: string;
+    subject: string;
     messages: string[];
 }

@@ -20,4 +20,8 @@ public enum MessageType
     [EnumMember(Value = "getConversations")]
     [JsonStringEnumMemberName("getConversations")]
     GetConversations = 3,
+    
+    [EnumMember(Value = "getConversation")]
+    [JsonStringEnumMemberName("getConversation")]
+    GetConversation = 4,
 }

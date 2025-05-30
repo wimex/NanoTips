@@ -51,16 +51,26 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
     {
         _ = Task.Run(async () =>
         {
+            using IServiceScope scope = serviceProvider.CreateScope();
             WebsocketEnvelopeModel envelope = JsonSerializer.Deserialize<WebsocketEnvelopeModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
+            
             switch (envelope.Type)
             {
                 case MessageType.ReqConversations:
-                    IServiceScope scope = serviceProvider.CreateScope();
+                {
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-
                     IList<ConversationListModel> conversations = await conversationManager.GetConversations();
                     await this.SendMessage(connectionId, MessageType.GetConversations, conversations);
                     break;
+                }
+                case MessageType.ReqConversation:
+                {
+                    WebsocketEnvelopeModel<string> request = envelope.To<string>();
+                    IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
+                    ConversationViewModel conversation = await conversationManager.GetConversation(request.Content);
+                    await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
+                    break;
+                }
                 default:
                     logger.LogError($"Received unsupported message type: {envelope.Type}");
                     return;

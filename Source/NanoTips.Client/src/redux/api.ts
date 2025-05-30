@@ -1,14 +1,14 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {ws} from "@/redux/socket.ts";
-import type {ConversationListModel} from "@/models/conversations.model.tsx";
+import type {ConversationListModel, ConversationViewModel} from "@/models/conversations.model.tsx";
 
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
     endpoints: (builder) => ({
-        reqConversation: builder.mutation<void, void>({
-            queryFn() {
+        reqConversation: builder.mutation<void, string>({
+            queryFn(conversationId) {
                 console.log(`Running reqConversation`);
-                ws.sendMessage('reqConversation', {});
+                ws.sendMessage('reqConversation', conversationId);
                 return { data: undefined };
             }
         }),
@@ -17,6 +17,34 @@ export const api = createApi({
                 console.log('Running reqConversations');
                 ws.sendMessage('reqConversations', {});
                 return { data: undefined };
+            },
+        }),
+        getConversation: builder.query<ConversationViewModel, void>({
+            queryFn() {
+                return { data: {} as ConversationViewModel };
+            },
+            async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved}) {
+                console.log(`Running getConversation: ${arg}`);
+                
+                function onMessageReceived(data: ConversationViewModel) {
+                    console.log(`Message received: ${arg}`);
+                    
+                    updateCachedData(() => {
+                        return data;
+                    });
+                }
+                
+                try {
+                    await cacheDataLoaded;
+                    console.log(`getConversation cache data loaded: ${arg}`);
+                    
+                    ws.addMessageListener('getConversation', onMessageReceived);
+                } finally {
+                    await cacheEntryRemoved;
+                    ws.removeMessageListener('getConversation', onMessageReceived);
+                    
+                    console.log(`getConversation cache entry removed: ${arg}`);
+                }
             },
         }),
         getConversations: builder.query<ConversationListModel[], void>({
@@ -30,8 +58,9 @@ export const api = createApi({
                     console.log(`Message received: ${arg}`);
                     
                     updateCachedData((draft) => {
-                        draft.push(...data);
-                        console.log(`Updated cache with data`, draft);
+                        const items = [...draft, ...data];
+                        const uniques = items.filter((x, i, a) => a.indexOf(x) === i);
+                        return uniques.sort((a, b) => new Date(b.lastMessageDate).getTime() - new Date(a.lastMessageDate).getTime());
                     });
                 }
                 
@@ -53,6 +82,7 @@ export const api = createApi({
 
 export const {
     useGetConversationsQuery,
+    useGetConversationQuery,
     useReqConversationsMutation,
     useReqConversationMutation,
 } = api;

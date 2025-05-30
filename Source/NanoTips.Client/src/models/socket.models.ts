@@ -1,7 +1,6 @@
 import type {
     ConversationListModel,
-    GetConversationRequest,
-    GetConversationResponse
+    ConversationViewModel
 } from "@/models/conversations.model.tsx";
 
 export type MessageTypes = 'none' | 
@@ -20,8 +19,8 @@ export type EnvelopeTypes<T extends MessageTypes> =
     T extends 'none' ? never :
         T extends 'reqConversations' ? {} :
             T extends 'getConversations' ? ConversationListModel[] :
-                T extends 'reqConversation' ? GetConversationRequest :
-                    T extends 'getConversation' ? GetConversationResponse :
+                T extends 'reqConversation' ? string :
+                    T extends 'getConversation' ? ConversationViewModel :
                 never;
 
 export type ListenerTypes<T extends MessageTypes> = (data: EnvelopeTypes<T>) => void;

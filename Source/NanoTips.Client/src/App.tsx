@@ -2,8 +2,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import styles from './App.module.scss';
 import {useState} from "react";
 import Conversations from "@/components/app/conversations/conversations.tsx";
+import Conversation from "@/components/app/conversation/conversation.tsx";
 
 function App() {
+    const [conversationId, setConversationId] = useState<string | null>(null);
     const [tab, setTab] = useState<string>('messages');
     
     return (
@@ -25,10 +27,10 @@ function App() {
             </div>
             <div className={styles.content}>
                 <div className={styles.sidebar}>
-                    {tab === 'messages' ? (<Conversations />) : (<div>articles</div>)}
+                    {tab === 'messages' ? (<Conversations onConversationIdChanged={setConversationId} />) : (<div>articles</div>)}
                 </div>
                 <div className={styles.main}>
-                    {tab === 'messages' ? (<div>messages</div>) : (<div>articles</div>)}
+                    {tab === 'messages' ? (<Conversation conversationId={conversationId}></Conversation>) : (<div>articles</div>)}
                 </div>
             </div>
         </div>
