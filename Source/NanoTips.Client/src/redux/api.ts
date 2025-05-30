@@ -1,14 +1,14 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {ws} from "@/redux/socket.ts";
-import type {GetConversationRequest} from "@/models/socket.models.ts";
+import type {ConversationListModel} from "@/models/conversations.model.tsx";
 
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
     endpoints: (builder) => ({
-        reqConversation: builder.mutation<void, GetConversationRequest>({
-            queryFn(request) {
-                console.log(`Running reqConversation: ${request.conversationId}`);
-                ws.sendMessage('reqConversation', request);
+        reqConversation: builder.mutation<void, void>({
+            queryFn() {
+                console.log(`Running reqConversation`);
+                ws.sendMessage('reqConversation', {});
                 return { data: undefined };
             }
         }),
@@ -19,18 +19,19 @@ export const api = createApi({
                 return { data: undefined };
             },
         }),
-        getConversations: builder.query<string[], void>({
+        getConversations: builder.query<ConversationListModel[], void>({
             queryFn() {
                 return { data: [] };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved}) {
                 console.log(`Running getConversations: ${arg}`);
                 
-                function onMessageReceived() {
+                function onMessageReceived(data: ConversationListModel[]) {
                     console.log(`Message received: ${arg}`);
                     
-                    updateCachedData((_) => {
-                        //TODO: Update data in the cache
+                    updateCachedData((draft) => {
+                        draft.push(...data);
+                        console.log(`Updated cache with data`, draft);
                     });
                 }
                 

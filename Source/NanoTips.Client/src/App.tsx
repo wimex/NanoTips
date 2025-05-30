@@ -1,19 +1,10 @@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import styles from './App.module.scss';
-import {useEffect, useState} from "react";
-import {useReqConversationMutation, useReqConversationsMutation} from "@/redux/api.ts";
+import {useState} from "react";
+import Conversations from "@/components/app/conversations/conversations.tsx";
 
 function App() {
     const [tab, setTab] = useState<string>('messages');
-    const [reqConversations] = useReqConversationsMutation();
-    const [reqConversation] = useReqConversationMutation();
-    
-    useEffect(() => {
-        (async () => {
-            await reqConversations();
-            await reqConversation({ conversationId: 'test-conversation' });
-        })();
-    }, []);
     
     return (
         <div className={styles.container}>
@@ -34,7 +25,7 @@ function App() {
             </div>
             <div className={styles.content}>
                 <div className={styles.sidebar}>
-                    {tab === 'messages' ? (<div>messages</div>) : (<div>articles</div>)}
+                    {tab === 'messages' ? (<Conversations />) : (<div>articles</div>)}
                 </div>
                 <div className={styles.main}>
                     {tab === 'messages' ? (<div>messages</div>) : (<div>articles</div>)}

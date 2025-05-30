@@ -24,18 +24,20 @@ class WebSocketClass
             this.ws.send(json);
             console.log('WebSocket message sent:', json);
         } else {
-            console.error('WebSocket is not open. Cannot send message:', json);
+            console.error('WebSocket is not open. Cannot send message:', this.ws?.readyState, json);
             setTimeout(() => {
                 this.sendMessage(type, message);
             }, 1000);
         }
     }
     
-    public addMessageListener<T extends MessageTypes>(type: MessageTypes, listener: ListenerTypes<T>): void {
+    public addMessageListener<T extends MessageTypes>(type: T, listener: ListenerTypes<T>): void {
+        this.listeners.message[type] = this.listeners.message[type] || [];
         this.listeners.message[type].push(listener);
     }
     
-    public removeMessageListener<T extends MessageTypes>(type: MessageTypes, listener: ListenerTypes<T>): void {
+    public removeMessageListener<T extends MessageTypes>(type: T, listener: ListenerTypes<T>): void {
+        this.listeners.message[type] = this.listeners.message[type] || [];
         const index = this.listeners.message[type].indexOf(listener);
         if (index !== -1) {
             this.listeners.message[type].splice(index, 1);
@@ -64,7 +66,11 @@ class WebSocketClass
             const message = JSON.parse(event.data) as WebsocketEnvelopeModelTyped<typeof typecheck.type>;
             if (message && message.type) {
                 const listeners = this.listeners.message[message.type] as ListenerTypes<typeof message.type>[];
+                if(!Array.isArray(listeners))
+                    return;
+                
                 for (const listener of listeners) {
+                    console.log('Calling listener for type:', message.type, 'with data:', message.data);
                     listener(message.data);
                 }
             } else {

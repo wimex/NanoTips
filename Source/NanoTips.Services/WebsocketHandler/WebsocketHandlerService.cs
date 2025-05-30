@@ -49,23 +49,23 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
     
     private async Task ReceiveMessage(string connectionId, string content)
     {
-        WebsocketEnvelopeModel envelope = JsonSerializer.Deserialize<WebsocketEnvelopeModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
-        switch (envelope.Type)
+        _ = Task.Run(async () =>
         {
-            case MessageType.ReqConversations:
-                ThreadPool.QueueUserWorkItem(_ =>
-                {
+            WebsocketEnvelopeModel envelope = JsonSerializer.Deserialize<WebsocketEnvelopeModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
+            switch (envelope.Type)
+            {
+                case MessageType.ReqConversations:
                     IServiceScope scope = serviceProvider.CreateScope();
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-                    
-                    IList<ConversationListModel> conversations = conversationManager.GetConversations().Result;
-                    this.SendMessage(connectionId, MessageType.GetConversations, conversations).Wait();
-                });
-                break;
-            default:
-                logger.LogError($"Received unsupported message type: {envelope.Type}");
-                return;
-        }
+
+                    IList<ConversationListModel> conversations = await conversationManager.GetConversations();
+                    await this.SendMessage(connectionId, MessageType.GetConversations, conversations);
+                    break;
+                default:
+                    logger.LogError($"Received unsupported message type: {envelope.Type}");
+                    return;
+            }
+        });
     }
     
     private async Task SendMessage<T>(string connectionId, MessageType type, T content)

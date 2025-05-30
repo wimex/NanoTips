@@ -1,3 +1,9 @@
+import type {
+    ConversationListModel,
+    GetConversationRequest,
+    GetConversationResponse
+} from "@/models/conversations.model.tsx";
+
 export type MessageTypes = 'none' | 
     'reqConversations' | 'getConversations' |
     'reqConversation' | 'getConversation';
@@ -10,23 +16,10 @@ export type WebsocketEnvelopeModelTyped<TType extends MessageTypes> = WebsocketE
     data: EnvelopeTypes<TType>;
 }
 
-export type GetConversationsMessage = {
-    conversations: string[];
-}
-
-export type GetConversationRequest = {
-    conversationId: string;
-}
-
-export type GetConversationResponse = {
-    conversationId: string;
-    messages: string[];
-}
-
 export type EnvelopeTypes<T extends MessageTypes> =
     T extends 'none' ? never :
         T extends 'reqConversations' ? {} :
-            T extends 'getConversations' ? GetConversationsMessage :
+            T extends 'getConversations' ? ConversationListModel[] :
                 T extends 'reqConversation' ? GetConversationRequest :
                     T extends 'getConversation' ? GetConversationResponse :
                 never;
