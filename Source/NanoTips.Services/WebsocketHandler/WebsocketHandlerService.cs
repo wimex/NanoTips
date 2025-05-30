@@ -19,6 +19,24 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
     
     private static ConcurrentDictionary<string, WebSocket> Connections { get; } = new();
 
+    public async Task SendMessageToAll<TMessage>(MessageType type, TMessage content)
+    {
+        IList<string> connectionIds = Connections.Keys.ToList();
+        foreach (string connectionId in connectionIds)
+        {
+            try
+            {
+                await this.SendMessage(connectionId, type, content);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Failed to send message to connection {ConnectionId}", connectionId);
+                Connections.TryRemove(connectionId, out _);
+            }
+        }
+    }
+
+
     public async Task AcceptConnection(WebSocket socket)
     {
         string connectionId = Guid.NewGuid().ToString();

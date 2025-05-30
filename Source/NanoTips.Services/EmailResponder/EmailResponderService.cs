@@ -38,6 +38,8 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
                 .GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages)
                 .UpdateOneAsync(m => m.Id == messageId, Builders<ConversationMessage>.Update.Set(m => m.CategorySuggestions, categories));
             
+            
+            
             return;
         }
         
