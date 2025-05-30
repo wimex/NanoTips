@@ -19,19 +19,17 @@ export const api = createApi({
                 return { data: undefined };
             },
         }),
-        getConversation: builder.query<ConversationViewModel, void>({
+        getConversation: builder.query<ConversationViewModel, string>({
             queryFn() {
                 return { data: {} as ConversationViewModel };
             },
-            async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved}) {
+            async onCacheEntryAdded(arg, {cacheDataLoaded, cacheEntryRemoved, dispatch}) {
                 console.log(`Running getConversation: ${arg}`);
                 
                 function onMessageReceived(data: ConversationViewModel) {
-                    console.log(`Message received: ${arg}`);
-                    
-                    updateCachedData(() => {
+                    dispatch(api.util.updateQueryData('getConversation', data.conversationId, () => {
                         return data;
-                    });
+                    }));
                 }
                 
                 try {

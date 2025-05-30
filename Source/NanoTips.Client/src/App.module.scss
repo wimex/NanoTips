@@ -31,17 +31,6 @@
   }
   
   .content {
-    display: grid;
-    grid-template-columns: 300px auto;
-    grid-template-rows: 1fr;
-    grid-template-areas: "sidebar main";
-    
-    .sidebar {
-      grid-area: sidebar;
-    }
-    
-    .main {
-      grid-area: main;
-    }
+    grid-area: content;
   }
 }
