@@ -51,15 +51,16 @@ export const api = createApi({
             queryFn() {
                 return { data: [] };
             },
-            async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved}) {
+            async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved, getCacheEntry}) {
                 console.log(`Running getConversations: ${arg}`);
                 
                 function onMessageReceived(data: ConversationListModel[]) {
                     console.log(`Message received: ${arg}`);
                     
-                    updateCachedData((draft) => {
-                        const items = [...draft, ...data];
-                        const uniques = items.filter((x, i, a) => a.indexOf(x) === i);
+                    updateCachedData(() => {
+                        const entries = getCacheEntry()?.data || [];
+                        const items = [...data, ...entries];
+                        const uniques = items.filter((x, i, a) => a.findIndex(y => x.conversationId === y.conversationId) === i);
                         return uniques.sort((a, b) => new Date(b.lastMessageDate).getTime() - new Date(a.lastMessageDate).getTime());
                     });
                 }

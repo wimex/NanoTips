@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using NanoTips.Data.Enums;
 
 namespace NanoTips.Services.Models;
@@ -9,6 +10,7 @@ public class ConversationMessageViewModel
     public required DateTime Created { get; init; }
     public required DateTime? Processed { get; init; }
     
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required MessageDirection Direction { get; init; }
     
     public required string Sender { get; init; }

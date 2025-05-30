@@ -13,5 +13,21 @@ export type GetConversationRequest = {
 export type ConversationViewModel = {
     conversationId: string;
     subject: string;
-    messages: string[];
+    messages: ConversationMessageViewModel[];
 }
+
+export type ConversationMessageViewModel = {
+    messageId: string;
+    created: Date;
+    processed: Date | null;
+    direction: MessageDirection;
+    sender: string;
+    recipient: string;
+    subject: string;
+    body: string;
+    categorySuggestions: Record<string, number>;
+    categoryId?: string;
+    sent: boolean;
+};
+
+export type MessageDirection = 'incoming' | 'outgoing';
