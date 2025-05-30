@@ -1,42 +1,47 @@
 import {
-    type EnvelopeTypes,
-    type ListenerTypes,
-    type MessageTypes, type WebsocketEnvelopeModel, type WebsocketEnvelopeModelTyped
+    type CallbackType,
+    type DataType,
+    type MessageType, type WebsocketEnvelope, type WebsocketEnvelopeTyped
 } from "@/models/socket.models";
 
 class WebSocketClass
 {
+    private keepAlive = {
+        checkInterval: 10000,
+        backoffPeriods: [1000, 1000, 2000, 5000, 10000, 10000, 30000, 60000],
+        currentPeriod: 0,
+        retryDelay: 3000,
+    };
+    
     private url: string = 'http://localhost:5245/ws';
     private ws: WebSocket | null = null;
     
     private listeners = {
         open: [] as Array<() => void>,
-        message: {} as Record<MessageTypes, Array<ListenerTypes<MessageTypes>>>,
+        message: {} as Record<MessageType, Array<CallbackType<MessageType>>>,
         close: [] as Array<() => void>,
         error: [] as Array<(error: Event) => void>,
     }
     
-    public sendMessage<T extends MessageTypes>(type: MessageTypes, message: EnvelopeTypes<T>): void {
-        const data: WebsocketEnvelopeModelTyped<T> = { type: type, data: message };
+    public sendMessage<T extends MessageType>(type: MessageType, message: DataType<T>): void {
+        const data: WebsocketEnvelopeTyped<T> = { type: type, data: message };
         const json = JSON.stringify(data);
         
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
             this.ws.send(json);
-            console.log('WebSocket message sent:', json);
         } else {
-            console.error('WebSocket is not open. Cannot send message:', this.ws?.readyState, json);
             setTimeout(() => {
                 this.sendMessage(type, message);
-            }, 1000);
+            }, this.keepAlive.retryDelay);
         }
     }
     
-    public addMessageListener<T extends MessageTypes>(type: T, listener: ListenerTypes<T>): void {
+    public addMessageListener<T extends MessageType>(type: T, listener: CallbackType<T>): void {
         this.listeners.message[type] = this.listeners.message[type] || [];
         this.listeners.message[type].push(listener);
     }
     
-    public removeMessageListener<T extends MessageTypes>(type: T, listener: ListenerTypes<T>): void {
+    public removeMessageListener<T extends MessageType>(type: T, listener: CallbackType<T>): void {
         this.listeners.message[type] = this.listeners.message[type] || [];
         const index = this.listeners.message[type].indexOf(listener);
         if (index !== -1) {
@@ -44,59 +49,87 @@ class WebSocketClass
         }
     }
     
-    public initialize(): void {
+    private watchdog(): void {
+        if (!this.ws) //Connection is closed, no need to keep alive
+            return;
+        
+        // Connection is in a healthy state
+        if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+            this.keepAlive.currentPeriod = 0;
+            setTimeout(() => this.watchdog(), this.keepAlive.checkInterval);
+            return;
+        }
+        
+        try {
+            this.initialize(true);
+        } finally {
+            const period = Math.max(this.keepAlive.currentPeriod, this.keepAlive.backoffPeriods.length - 1);
+            const timeout = this.keepAlive.backoffPeriods[period];
+            this.keepAlive.currentPeriod++;
+
+            setTimeout(() => this.watchdog(), timeout);
+        }
+    }
+    
+    private callEventHandlers(type: 'open' | 'close' | 'message' | 'error', event?: Event): void {
+        if (type === 'open' || type === 'close') {
+            this.listeners[type].forEach(handler => handler());
+        } else if (type === 'message' && event) {
+            const parameter = event as MessageEvent;
+            if (!parameter || !parameter.data) {
+                console.warn('Received message with no data:', event);
+                return;
+            }
+
+            const typecheck = JSON.parse(parameter.data) as WebsocketEnvelope;
+            if (!typecheck || !typecheck.type) {
+                console.warn('Received message with no type:', parameter.data);
+                return;
+            }
+
+            const message = JSON.parse(parameter.data) as WebsocketEnvelopeTyped<typeof typecheck.type>;
+            if (message && message.type) {
+                const listeners = this.listeners.message[message.type];
+                if (!Array.isArray(listeners))
+                    return;
+
+                listeners.forEach(handler => handler(message.data));
+            } else {
+                console.warn('Received message with unknown type:', message);
+            }
+        } else if (type === 'error') {
+            const error = event ?? new Event('Unknown error during WebSocket operation');
+            this.listeners[type].forEach(handler => handler(error));
+        }
+    }
+    
+    public initialize(watchdog: boolean): void {
         this.ws = new WebSocket(this.url);
+        
+        if(!watchdog)
+            this.watchdog();
         
         this.ws.addEventListener('open', () => {
             console.log('WebSocket connection opened');
-            for (const listener of this.listeners.open) {
-                listener();
-            }
+            this.callEventHandlers('open');
         });
         
         this.ws.addEventListener('message', (event) => {
             console.log('WebSocket message received:', event.data);
-            
-            const typecheck = JSON.parse(event.data) as WebsocketEnvelopeModel;
-            if (!typecheck || !typecheck.type) {
-                console.warn('Received message with no type:', event.data);
-                return;
-            }
-            
-            const message = JSON.parse(event.data) as WebsocketEnvelopeModelTyped<typeof typecheck.type>;
-            if (message && message.type) {
-                const listeners = this.listeners.message[message.type] as ListenerTypes<typeof message.type>[];
-                if(!Array.isArray(listeners))
-                    return;
-                
-                for (const listener of listeners) {
-                    console.log('Calling listener for type:', message.type, 'with data:', message.data);
-                    listener(message.data);
-                }
-            } else {
-                console.warn('Received message with unknown type:', message);
-            }
+            this.callEventHandlers('message', event);
         });
         
         this.ws.addEventListener('close', () => {
-            for (const listener of this.listeners.close) {
-                listener();
-            }
-            
+            this.callEventHandlers('close');
             this.ws = null;
         });
         
         this.ws.addEventListener('error', (error) => {
-            for (const listener of this.listeners.error) {
-                listener(error);
-            }
-            
-            console.error('WebSocket error:', error);
+            this.callEventHandlers('error', error);
             this.ws?.close();
-            this.initialize();
         });
     }
 }
 
 export const ws = new WebSocketClass();
-ws.initialize();
+ws.initialize(false);

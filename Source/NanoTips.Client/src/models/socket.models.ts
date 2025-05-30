@@ -3,24 +3,38 @@ import type {
     ConversationViewModel
 } from "@/models/conversations.model.tsx";
 
-export type MessageTypes = 'none' | 
-    'reqConversations' | 'getConversations' |
-    'reqConversation' | 'getConversation';
+// Denotes all the possible message types. Every envelope will contain two fields: type and data.
+export const messageTypes = {
+    none: 'none',
+    reqConversations: 'reqConversations',
+    getConversations: 'getConversations',
+    reqConversation: 'reqConversation',
+    getConversation: 'getConversation',
+} as const;
 
-export type WebsocketEnvelopeModel = {
-    type: MessageTypes;
+// Acts as a union type for all possible message types.
+export type MessageType = (typeof messageTypes)[keyof typeof messageTypes];
+
+// Infers the data type based on the message type. When the envelope contains e.g. type = 'getConversations', 
+// the data field will be of type ConversationListModel[].
+export type DataType<T extends MessageType> = 
+    T extends typeof messageTypes.none ? never :
+    T extends typeof messageTypes.reqConversations ? void :
+    T extends typeof messageTypes.getConversations ? ConversationListModel[] :
+    T extends typeof messageTypes.reqConversation ? string :
+    T extends typeof messageTypes.getConversation ? ConversationViewModel :
+    never;
+
+// Defines a callback type that takes data of the specified message type as an argument.
+// When an envelope with type 'getConversations' is received, the callback will receive data of type ConversationListModel[].
+export type CallbackType<T extends MessageType> = (data: DataType<T>) => void;
+
+// Defines the structure of a WebSocket envelope. Every message sent or received must conform to this structure.
+export type WebsocketEnvelope = {
+    type: MessageType;
 }
 
-export type WebsocketEnvelopeModelTyped<TType extends MessageTypes> = WebsocketEnvelopeModel & {
-    data: EnvelopeTypes<TType>;
+// Defines a typed version of the WebSocket envelope. It includes the data field based on the message type.
+export type WebsocketEnvelopeTyped<TType extends MessageType> = WebsocketEnvelope & {
+    data: DataType<TType>;
 }
-
-export type EnvelopeTypes<T extends MessageTypes> =
-    T extends 'none' ? never :
-        T extends 'reqConversations' ? {} :
-            T extends 'getConversations' ? ConversationListModel[] :
-                T extends 'reqConversation' ? string :
-                    T extends 'getConversation' ? ConversationViewModel :
-                never;
-
-export type ListenerTypes<T extends MessageTypes> = (data: EnvelopeTypes<T>) => void;
