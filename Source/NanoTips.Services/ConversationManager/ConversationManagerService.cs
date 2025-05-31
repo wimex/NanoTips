@@ -13,8 +13,8 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
     {
         if (!ObjectId.TryParse(conversationId, out ObjectId parsedConversationId)) throw new ArgumentException("Invalid conversation ID format.", nameof(conversationId));
 
-        IMongoCollection<ConversationMessage> collection = database.GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages);
-        List<ConversationMessage>? messages = await collection
+        IMongoCollection<ConversationMessage> cmCollection = database.GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages);
+        List<ConversationMessage>? messages = await cmCollection
             .Find(c => c.ConversationId == parsedConversationId)
             .SortByDescending(c => c.Created)
             .ToListAsync();
@@ -22,6 +22,16 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
         if (messages.Count == 0)
             throw new KeyNotFoundException($"No messages found for conversation ID: {conversationId}");
 
+        List<string> suggestionIds = messages
+            .SelectMany(m => m.CategorySuggestions.Keys)
+            .Distinct()
+            .ToList();
+        
+        IMongoCollection<KnowledgeBaseArticle> kbCollection = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
+        List<KnowledgeBaseArticle>? suggestions = await kbCollection
+            .Find(k => suggestionIds.Contains(k.Id.ToString()))
+            .ToListAsync();
+        
         ConversationViewModel conversation = new()
         {
             ConversationId = conversationId,
@@ -36,7 +46,12 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
                 Recipient = m.Recipient,
                 Subject = m.Subject,
                 Body = m.Body,
-                CategorySuggestions = m.CategorySuggestions,
+                CategorySuggestions = m.CategorySuggestions.ToDictionary(
+                    kvp => kvp.Key,
+                    kvp => CategorySuggestionViewModel.FromKnowledgeBaseArticle( 
+                        suggestions.FirstOrDefault(s => s.Id.ToString() == kvp.Key), kvp.Value)
+                        ?? new CategorySuggestionViewModel{ CategoryId = kvp.Key, Title = null, Confidence = kvp.Value }
+                ),
                 CategoryId = m.CategoryId,
             }).ToList()
         };

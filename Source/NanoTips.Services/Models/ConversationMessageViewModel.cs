@@ -19,8 +19,8 @@ public class ConversationMessageViewModel
     public required string Subject { get; init; }
     public required string Body { get; init; }
     
-    public Dictionary<string, double> CategorySuggestions { get; init; } = new();
+    public Dictionary<string, CategorySuggestionViewModel> CategorySuggestions { get; init; } = new();
     
     public string? CategoryId { get; init; }
-    public bool Sent => this.Processed != null;
+    public bool Handled => this.Processed != null;
 }

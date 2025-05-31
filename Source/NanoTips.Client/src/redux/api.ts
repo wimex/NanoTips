@@ -8,7 +8,7 @@ export const api = createApi({
     endpoints: (builder) => ({
         getConversation: builder.query<ConversationViewModel, string>({
             queryFn(conversationId) {
-                ws.sendMessage(messageTypes.getConversation, conversationId);
+                ws.sendMessage(messageTypes.getConversation, {conversationId, subject: '', messages: []});
                 return { data: {} as ConversationViewModel };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, cacheEntryRemoved, dispatch}) {
@@ -33,13 +33,11 @@ export const api = createApi({
         }),
         getConversations: builder.query<ConversationListModel[], void>({
             queryFn() {
-                ws.sendMessage(messageTypes.getConversations, {});
+                ws.sendMessage(messageTypes.getConversations, []);
                 return { data: [] };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved, getCacheEntry}) {
                 function onMessageReceived(data: ConversationListModel[]) {
-                    console.log(`Message received: ${arg}`);
-                    
                     updateCachedData(() => {
                         const entries = getCacheEntry()?.data || [];
                         const items = [...data, ...entries];

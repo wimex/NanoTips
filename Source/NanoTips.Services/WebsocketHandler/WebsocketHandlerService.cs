@@ -83,9 +83,9 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                 }
                 case MessageType.GetConversation:
                 {
-                    WebsocketEnvelopeModel<string> request = envelope.To<string>();
+                    WebsocketEnvelopeModel<ConversationViewModel> request = envelope.To<ConversationViewModel>();
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-                    ConversationViewModel conversation = await conversationManager.GetConversation(request.Content);
+                    ConversationViewModel conversation = await conversationManager.GetConversation(request.Content.ConversationId);
                     await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
                     break;
                 }

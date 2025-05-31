@@ -24,5 +24,5 @@ public record WebsocketEnvelopeModel
 
 public record WebsocketEnvelopeModel<TContent> : WebsocketEnvelopeModel where TContent : class
 {
-    public TContent? Content => this.Data.Deserialize(typeof(TContent)) as TContent;
+    public TContent? Content => this.Data.Deserialize(typeof(TContent), new JsonSerializerOptions{PropertyNameCaseInsensitive = true}) as TContent;
 }

@@ -25,9 +25,16 @@ export type ConversationMessageViewModel = {
     recipient: string;
     subject: string;
     body: string;
-    categorySuggestions: Record<string, number>;
+    categorySuggestions: Record<string, CategorySuggestionViewModel>;
     categoryId?: string;
-    sent: boolean;
+    handled: boolean;
+};
+
+export type CategorySuggestionViewModel = {
+    categoryId: string;
+    title: string;
+    confidence: number;
+    exists: boolean;
 };
 
 export type MessageDirection = 'incoming' | 'outgoing';
