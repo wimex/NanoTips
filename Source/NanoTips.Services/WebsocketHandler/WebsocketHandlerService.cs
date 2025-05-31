@@ -74,14 +74,14 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
             
             switch (envelope.Type)
             {
-                case MessageType.ReqConversations:
+                case MessageType.GetConversations:
                 {
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
                     IList<ConversationListModel> conversations = await conversationManager.GetConversations();
                     await this.SendMessage(connectionId, MessageType.GetConversations, conversations);
                     break;
                 }
-                case MessageType.ReqConversation:
+                case MessageType.GetConversation:
                 {
                     WebsocketEnvelopeModel<string> request = envelope.To<string>();
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();

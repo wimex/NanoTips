@@ -1,20 +1,8 @@
-import {useGetConversationQuery, useReqConversationMutation} from "@/redux/api.ts";
-import {useEffect} from "react";
+import {useGetConversationQuery} from "@/redux/api.ts";
 import {ArrowBottomRightIcon, ArrowTopRightIcon} from "@radix-ui/react-icons";
 
 export default function Conversation({ conversationId }: { conversationId: string }) {
     const getConversation = useGetConversationQuery(conversationId);
-    const [reqConversation] = useReqConversationMutation();
-
-    useEffect(() => {
-        if (!conversationId) 
-            return;
-        
-        (async () => {
-            console.log(`Requesting conversation with ID: ${conversationId}`);
-            await reqConversation(conversationId);
-        })();
-    }, [conversationId]);
     
     return (
         <div>

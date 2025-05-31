@@ -1,16 +1,9 @@
-import {useGetConversationsQuery, useReqConversationsMutation} from "@/redux/api.ts";
+import {useGetConversationsQuery} from "@/redux/api.ts";
 import {useEffect} from "react";
 
 export default function Conversations({ onConversationIdChanged }: { onConversationIdChanged: (conversationId: string) => void }) {
-    const [reqConversations] = useReqConversationsMutation();
     const getConversations = useGetConversationsQuery();
 
-    useEffect(() => {
-        (async () => {
-            await reqConversations();
-        })();
-    }, []);
-    
     return (<div>
         {getConversations.data?.map((conversation) => (
             <div key={conversation.conversationId} className="p-2 border-b border-gray-200 hover:bg-gray-100 cursor-pointer" onClick={() => onConversationIdChanged(conversation.conversationId)}>

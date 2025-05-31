@@ -1,31 +1,17 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {ws} from "@/redux/socket.ts";
 import type {ConversationListModel, ConversationViewModel} from "@/models/conversations.model.tsx";
+import {messageTypes} from "@/models/socket.models.ts";
 
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
     endpoints: (builder) => ({
-        reqConversation: builder.mutation<void, string>({
-            queryFn(conversationId) {
-                console.log(`Running reqConversation`);
-                ws.sendMessage('reqConversation', conversationId);
-                return { data: undefined };
-            }
-        }),
-        reqConversations: builder.mutation<void, void>({
-            queryFn() {
-                console.log('Running reqConversations');
-                ws.sendMessage('reqConversations', {});
-                return { data: undefined };
-            },
-        }),
         getConversation: builder.query<ConversationViewModel, string>({
-            queryFn() {
+            queryFn(conversationId) {
+                ws.sendMessage(messageTypes.getConversation, conversationId);
                 return { data: {} as ConversationViewModel };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, cacheEntryRemoved, dispatch}) {
-                console.log(`Running getConversation: ${arg}`);
-                
                 function onMessageReceived(data: ConversationViewModel) {
                     dispatch(api.util.updateQueryData('getConversation', data.conversationId, () => {
                         return data;
@@ -47,11 +33,10 @@ export const api = createApi({
         }),
         getConversations: builder.query<ConversationListModel[], void>({
             queryFn() {
+                ws.sendMessage(messageTypes.getConversations, {});
                 return { data: [] };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved, getCacheEntry}) {
-                console.log(`Running getConversations: ${arg}`);
-                
                 function onMessageReceived(data: ConversationListModel[]) {
                     console.log(`Message received: ${arg}`);
                     
@@ -82,6 +67,4 @@ export const api = createApi({
 export const {
     useGetConversationsQuery,
     useGetConversationQuery,
-    useReqConversationsMutation,
-    useReqConversationMutation,
 } = api;

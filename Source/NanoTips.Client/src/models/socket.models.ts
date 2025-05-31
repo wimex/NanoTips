@@ -6,9 +6,7 @@ import type {
 // Denotes all the possible message types. Every envelope will contain two fields: type and data.
 export const messageTypes = {
     none: 'none',
-    reqConversations: 'reqConversations',
     getConversations: 'getConversations',
-    reqConversation: 'reqConversation',
     getConversation: 'getConversation',
 } as const;
 
@@ -19,9 +17,7 @@ export type MessageType = (typeof messageTypes)[keyof typeof messageTypes];
 // the data field will be of type ConversationListModel[].
 export type DataType<T extends MessageType> = 
     T extends typeof messageTypes.none ? never :
-    T extends typeof messageTypes.reqConversations ? void :
     T extends typeof messageTypes.getConversations ? ConversationListModel[] :
-    T extends typeof messageTypes.reqConversation ? string :
     T extends typeof messageTypes.getConversation ? ConversationViewModel :
     never;
 

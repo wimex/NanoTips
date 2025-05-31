@@ -9,19 +9,11 @@ public enum MessageType
     [JsonStringEnumMemberName("none")]
     None = 0,
     
-    [EnumMember(Value = "reqConversations")]
-    [JsonStringEnumMemberName("reqConversations")]
-    ReqConversations = 1,
-    
-    [EnumMember(Value = "reqConversation")]
-    [JsonStringEnumMemberName("reqConversation")]
-    ReqConversation = 2,
-    
     [EnumMember(Value = "getConversations")]
     [JsonStringEnumMemberName("getConversations")]
-    GetConversations = 3,
+    GetConversations = 1,
     
     [EnumMember(Value = "getConversation")]
     [JsonStringEnumMemberName("getConversation")]
-    GetConversation = 4,
+    GetConversation = 2,
 }
