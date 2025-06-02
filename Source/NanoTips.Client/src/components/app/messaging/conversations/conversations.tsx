@@ -1,5 +1,4 @@
 import {useGetConversationsQuery} from "@/redux/api.ts";
-import {useEffect} from "react";
 
 export default function Conversations({ onConversationIdChanged }: { onConversationIdChanged: (conversationId: string) => void }) {
     const getConversations = useGetConversationsQuery();

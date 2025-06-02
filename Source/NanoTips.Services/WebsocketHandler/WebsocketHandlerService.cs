@@ -97,6 +97,14 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                     await this.SendMessage(connectionId, MessageType.GetArticles, articles);
                     break;
                 }
+                case MessageType.GetArticle:
+                {
+                    WebsocketEnvelopeModel<ArticleViewModel> request = envelope.To<ArticleViewModel>();
+                    IArticleManagerService articleManager = scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
+                    ArticleViewModel article = await articleManager.GetArticle(request.Content.ArticleId);
+                    await this.SendMessage(connectionId, MessageType.GetArticle, article);
+                    break;
+                }
                 case MessageType.EditArticle:
                 {
                     WebsocketEnvelopeModel<ArticleEditorModel> request = envelope.To<ArticleEditorModel>();
@@ -108,8 +116,8 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                         Slug = article.Slug,
                         Title = article.Title,
                     };
-                    
-                    await this.SendMessage(connectionId, MessageType.GetArticles, list);
+
+                    await this.SendMessage(connectionId, MessageType.GetArticles, new List<ArticleListViewModel> { list });
                     await this.SendMessage(connectionId, MessageType.GetArticle, article);
                     break;
                 }

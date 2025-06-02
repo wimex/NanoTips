@@ -37,7 +37,7 @@ export default function Editor({ articleId, onArticleSelected }: { articleId: st
         }
         
         editArticleMutation(article);
-        onArticleSelected(article.articleId === 'create-article' ? null : article.articleId ?? null);
+        onArticleSelected(null); // Clear the editor after saving
     }
     
     return (

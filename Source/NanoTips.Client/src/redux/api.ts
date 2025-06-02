@@ -15,7 +15,7 @@ export const api = createApi({
         }),
         getArticle: builder.query<ArticleListViewModel, string>({
             queryFn(articleId) {
-               // ws.sendMessage(messageTypes.getArticle, {articleId, slug: '', title: ''});
+                ws.sendMessage(messageTypes.getArticle, {articleId, slug: '', title: '', content: ''});
                 return { data: {} as ArticleListViewModel };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, cacheEntryRemoved, dispatch}) {
@@ -40,7 +40,7 @@ export const api = createApi({
         }),
         getArticles: builder.query<ArticleListViewModel[], void>({
             queryFn() {
-                ws.sendMessage(messageTypes.getConversations, []);
+                ws.sendMessage(messageTypes.getArticles, []);
                 return { data: [] };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved, getCacheEntry}) {
@@ -49,7 +49,7 @@ export const api = createApi({
                         const entries = getCacheEntry()?.data || [];
                         const items = [...data, ...entries];
                         const uniques = items.filter((x, i, a) => a.findIndex(y => x.articleId === y.articleId) === i);
-                        return uniques.sort((a, b) => new Date(b.title).getTime() - new Date(a.title).getTime());
+                        return uniques.sort((a, b) => a.title.localeCompare(b.title));
                     });
                 }
                 

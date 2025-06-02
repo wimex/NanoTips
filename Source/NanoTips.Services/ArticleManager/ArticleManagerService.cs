@@ -12,7 +12,8 @@ public class ArticleManagerService(IMongoDatabase database) : IArticleManagerSer
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        IMongoCollection<KnowledgeBaseArticle> collection = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
+        IMongoCollection<KnowledgeBaseArticle> collection =
+            database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
         if (model.ArticleId == null)
         {
             ObjectId articleId = ObjectId.GenerateNewId();
@@ -23,7 +24,7 @@ public class ArticleManagerService(IMongoDatabase database) : IArticleManagerSer
                 Title = model.Title,
                 Body = model.Content,
             });
-            
+
             return new ArticleViewModel
             {
                 ArticleId = articleId.ToString(),
@@ -44,7 +45,7 @@ public class ArticleManagerService(IMongoDatabase database) : IArticleManagerSer
                     Title = model.Title,
                     Body = model.Content,
                 });
-            
+
             return new ArticleViewModel
             {
                 ArticleId = articleId.ToString(),
@@ -53,6 +54,24 @@ public class ArticleManagerService(IMongoDatabase database) : IArticleManagerSer
                 Content = model.Content,
             };
         }
+    }
+
+    public async Task<ArticleViewModel> GetArticle(string articleId)
+    {
+        IMongoCollection<KnowledgeBaseArticle> collection = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
+        KnowledgeBaseArticle? article = await collection.Find(x => x.Id == ObjectId.Parse(articleId)).FirstOrDefaultAsync();
+        if (article == null)
+        {
+            throw new KeyNotFoundException($"Article with ID {articleId} not found.");
+        }
+
+        return new ArticleViewModel
+        {
+            ArticleId = article.Id.ToString(),
+            Slug = article.Slug,
+            Title = article.Title,
+            Content = article.Body,
+        };
     }
     
     public async Task<IList<ArticleListViewModel>> GetArticles()
