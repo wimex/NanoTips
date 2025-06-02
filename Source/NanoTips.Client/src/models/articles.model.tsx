@@ -10,3 +10,10 @@ export type ArticleEditorModel = {
     title: string;
     content: string;
 }
+
+export type ArticleViewModel = {
+    articleId: string;
+    slug: string;
+    title: string;
+    content: string;
+}

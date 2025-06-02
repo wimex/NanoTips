@@ -5,6 +5,7 @@ import Editor from "@/components/app/articles/editor/editor.tsx";
 
 export default function Articles() {
     const [articleId, setArticleId] = useState<string | null>(null);
+    console.log('Articles component rendered', articleId);
     
     return (
         <div className={styles.content}>

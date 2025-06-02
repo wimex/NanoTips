@@ -2,7 +2,7 @@ import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {ws} from "@/redux/socket.ts";
 import type {ConversationListModel, ConversationViewModel} from "@/models/conversations.model.tsx";
 import {messageTypes} from "@/models/socket.models.ts";
-import type {ArticleEditorModel, ArticleListViewModel} from "@/models/articles.model.tsx";
+import type {ArticleEditorModel, ArticleListViewModel, ArticleViewModel} from "@/models/articles.model.tsx";
 
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
@@ -13,13 +13,13 @@ export const api = createApi({
                 return { data: {} };
             },
         }),
-        getArticle: builder.query<ArticleListViewModel, string>({
+        getArticle: builder.query<ArticleViewModel, string>({
             queryFn(articleId) {
                 ws.sendMessage(messageTypes.getArticle, {articleId, slug: '', title: '', content: ''});
-                return { data: {} as ArticleListViewModel };
+                return { data: {} as ArticleViewModel };
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, cacheEntryRemoved, dispatch}) {
-                function onMessageReceived(data: ArticleListViewModel) {
+                function onMessageReceived(data: ArticleViewModel) {
                     dispatch(api.util.updateQueryData(messageTypes.getArticle, data.articleId, () => {
                         return data;
                     }));
