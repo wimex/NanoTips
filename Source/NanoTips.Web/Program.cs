@@ -4,6 +4,7 @@ using Hangfire.Mongo.Migration.Strategies;
 using Hangfire.Mongo.Migration.Strategies.Backup;
 using MongoDB.Driver;
 using NanoTips.Jobs.Webhook;
+using NanoTips.Services.ArticleManager;
 using NanoTips.Services.ConversationManager;
 using NanoTips.Services.EmailResponder;
 using NanoTips.Services.OpenAi;
@@ -38,7 +39,8 @@ builder.Services
     .AddTransient<IChatClientService, ChatClientService>()
     .AddTransient<IEmailResponderService, EmailResponderService>()
     .AddTransient<IWebsocketHandlerService, WebsocketHandlerService>()
-    .AddTransient<IConversationManagerService, ConversationManagerService>();
+    .AddTransient<IConversationManagerService, ConversationManagerService>()
+    .AddTransient<IArticleManagerService, ArticleManagerService>();
 
 builder.Services
     .AddTransient<DataSaverJob>()

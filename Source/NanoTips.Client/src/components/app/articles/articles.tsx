@@ -12,7 +12,7 @@ export default function Articles() {
                 <List onArticleSelected={setArticleId} />
             </div>
             <div className={styles.main}>
-                {articleId && <Editor articleId={articleId} />}
+                {articleId && <Editor onArticleSelected={setArticleId} articleId={articleId} />}
             </div>
         </div>
     );

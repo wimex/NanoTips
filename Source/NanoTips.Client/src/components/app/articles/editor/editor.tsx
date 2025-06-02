@@ -1,7 +1,8 @@
-import {useGetArticleQuery} from "@/redux/api.ts";
+import { useEditArticleMutation, useGetArticleQuery} from "@/redux/api.ts";
 import type {FormEvent} from "react";
 
-export default function Editor({ articleId }: { articleId: string }) {
+export default function Editor({ articleId, onArticleSelected }: { articleId: string, onArticleSelected: (articleId: string | null) => void }) {
+    const [editArticleMutation] = useEditArticleMutation();
     const getArticleQuery = useGetArticleQuery(articleId, { skip: articleId === 'create-article' });
     
     function onTitleChanged(e: React.ChangeEvent<HTMLInputElement>) {
@@ -27,6 +28,16 @@ export default function Editor({ articleId }: { articleId: string }) {
             alert('Title, slug and content are required');
             return;
         }
+        
+        const article = {
+            articleId: articleId === 'create-article' ? undefined : articleId,
+            title: title.toString(),
+            slug: slug.toString(),
+            content: content.toString(),
+        }
+        
+        editArticleMutation(article);
+        onArticleSelected(article.articleId === 'create-article' ? null : article.articleId ?? null);
     }
     
     return (

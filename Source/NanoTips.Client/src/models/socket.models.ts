@@ -2,7 +2,7 @@ import type {
     ConversationListModel,
     ConversationViewModel
 } from "@/models/conversations.model.tsx";
-import type {ArticleListViewModel} from "@/models/articles.model.tsx";
+import type {ArticleEditorModel, ArticleListViewModel} from "@/models/articles.model.tsx";
 
 // Denotes all the possible message types. Every envelope will contain two fields: type and data.
 export const messageTypes = {
@@ -11,6 +11,7 @@ export const messageTypes = {
     getConversation: 'getConversation',
     getArticles: 'getArticles',
     getArticle: 'getArticle',
+    editArticle: 'editArticle',
 } as const;
 
 // Acts as a union type for all possible message types.
@@ -23,6 +24,7 @@ export type DataType<T extends MessageType> =
     T extends typeof messageTypes.getConversations ? ConversationListModel[] :
     T extends typeof messageTypes.getConversation ? ConversationViewModel :
     T extends typeof messageTypes.getArticles ? ArticleListViewModel[] :
+    T extends typeof messageTypes.editArticle ? ArticleEditorModel :
     never;
 
 // Defines a callback type that takes data of the specified message type as an argument.
