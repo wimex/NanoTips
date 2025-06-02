@@ -14,5 +14,6 @@ export default function Messaging() {
             <div className={styles.main}>
                 {conversationId && <Conversation conversationId={conversationId}></Conversation>}
             </div>
-        </div>);
+        </div>
+    );
 }

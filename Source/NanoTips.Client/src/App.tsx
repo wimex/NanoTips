@@ -2,6 +2,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import styles from './App.module.scss';
 import {useState} from "react";
 import Messaging from "@/components/app/messaging/messaging.tsx";
+import Articles from "@/components/app/articles/articles.tsx";
 
 function App() {
     const [tab, setTab] = useState<string>('messages');
@@ -25,6 +26,7 @@ function App() {
             </div>
             <div className={styles.content}>
                 {tab === 'messages' && (<Messaging />)}
+                {tab === 'articles' && (<Articles />)}
             </div>
         </div>
     )

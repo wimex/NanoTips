@@ -28,7 +28,7 @@ export default function Conversation({ conversationId }: { conversationId: strin
                                                     className="text-blue-500 hover:underline"
                                                     onClick={() => answerWithArticle(category.categoryId)}
                                                 >
-                                                    {category.exists ? category.title : category.categoryId} ({category.confidence.toFixed(2)})
+                                                    {category.exists ? category.title : category.categoryId} ({(category.confidence * 100).toFixed(2)} %)
                                                 </button>
                                             </li>
                                         ))}

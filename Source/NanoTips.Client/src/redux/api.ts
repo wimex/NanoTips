@@ -2,10 +2,64 @@ import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {ws} from "@/redux/socket.ts";
 import type {ConversationListModel, ConversationViewModel} from "@/models/conversations.model.tsx";
 import {messageTypes} from "@/models/socket.models.ts";
+import type {ArticleListViewModel} from "@/models/articles.model.tsx";
 
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
     endpoints: (builder) => ({
+        getArticle: builder.query<ArticleListViewModel, string>({
+            queryFn(articleId) {
+               // ws.sendMessage(messageTypes.getArticle, {articleId, slug: '', title: ''});
+                return { data: {} as ArticleListViewModel };
+            },
+            async onCacheEntryAdded(arg, {cacheDataLoaded, cacheEntryRemoved, dispatch}) {
+                function onMessageReceived(data: ArticleListViewModel) {
+                    dispatch(api.util.updateQueryData(messageTypes.getArticle, data.articleId, () => {
+                        return data;
+                    }));
+                }
+                
+                try {
+                    await cacheDataLoaded;
+                    console.log(`getArticle cache data loaded: ${arg}`);
+                    
+                    ws.addMessageListener(messageTypes.getArticle, onMessageReceived);
+                } finally {
+                    await cacheEntryRemoved;
+                    ws.removeMessageListener(messageTypes.getArticle, onMessageReceived);
+                    
+                    console.log(`getArticle cache entry removed: ${arg}`);
+                }
+            },
+        }),
+        getArticles: builder.query<ArticleListViewModel[], void>({
+            queryFn() {
+                ws.sendMessage(messageTypes.getConversations, []);
+                return { data: [] };
+            },
+            async onCacheEntryAdded(arg, {cacheDataLoaded, updateCachedData, cacheEntryRemoved, getCacheEntry}) {
+                function onMessageReceived(data: ArticleListViewModel[]) {
+                    updateCachedData(() => {
+                        const entries = getCacheEntry()?.data || [];
+                        const items = [...data, ...entries];
+                        const uniques = items.filter((x, i, a) => a.findIndex(y => x.articleId === y.articleId) === i);
+                        return uniques.sort((a, b) => new Date(b.title).getTime() - new Date(a.title).getTime());
+                    });
+                }
+                
+                try {
+                    await cacheDataLoaded;
+                    console.log(`getArticles cache data loaded: ${arg}`);
+                    
+                    ws.addMessageListener(messageTypes.getArticles, onMessageReceived);
+                } finally {
+                    await cacheEntryRemoved;
+                    ws.removeMessageListener(messageTypes.getArticles, onMessageReceived);
+                    
+                    console.log(`getArticles cache entry removed: ${arg}`);
+                }
+            },
+        }),
         getConversation: builder.query<ConversationViewModel, string>({
             queryFn(conversationId) {
                 ws.sendMessage(messageTypes.getConversation, {conversationId, subject: '', messages: []});
@@ -13,7 +67,7 @@ export const api = createApi({
             },
             async onCacheEntryAdded(arg, {cacheDataLoaded, cacheEntryRemoved, dispatch}) {
                 function onMessageReceived(data: ConversationViewModel) {
-                    dispatch(api.util.updateQueryData('getConversation', data.conversationId, () => {
+                    dispatch(api.util.updateQueryData(messageTypes.getConversation, data.conversationId, () => {
                         return data;
                     }));
                 }
@@ -22,10 +76,10 @@ export const api = createApi({
                     await cacheDataLoaded;
                     console.log(`getConversation cache data loaded: ${arg}`);
                     
-                    ws.addMessageListener('getConversation', onMessageReceived);
+                    ws.addMessageListener(messageTypes.getConversation, onMessageReceived);
                 } finally {
                     await cacheEntryRemoved;
-                    ws.removeMessageListener('getConversation', onMessageReceived);
+                    ws.removeMessageListener(messageTypes.getConversation, onMessageReceived);
                     
                     console.log(`getConversation cache entry removed: ${arg}`);
                 }
@@ -50,10 +104,10 @@ export const api = createApi({
                     await cacheDataLoaded;
                     console.log(`getConversations cache data loaded: ${arg}`);
                     
-                    ws.addMessageListener('getConversations', onMessageReceived);
+                    ws.addMessageListener(messageTypes.getConversations, onMessageReceived);
                 } finally {
                     await cacheEntryRemoved;
-                    ws.removeMessageListener('getConversations', onMessageReceived);
+                    ws.removeMessageListener(messageTypes.getConversations, onMessageReceived);
                     
                     console.log(`getConversations cache entry removed: ${arg}`);
                 }
@@ -65,4 +119,6 @@ export const api = createApi({
 export const {
     useGetConversationsQuery,
     useGetConversationQuery,
+    useGetArticlesQuery,
+    useGetArticleQuery,
 } = api;

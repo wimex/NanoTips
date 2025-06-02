@@ -3,6 +3,7 @@ using System.Net.WebSockets;
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using NanoTips.Services.ArticleManager;
 using NanoTips.Services.ConversationManager;
 using NanoTips.Services.Enums;
 using NanoTips.Services.Models;
@@ -87,6 +88,13 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
                     ConversationViewModel conversation = await conversationManager.GetConversation(request.Content.ConversationId);
                     await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
+                    break;
+                }
+                case MessageType.GetArticles:
+                {
+                    IArticleManagerService articleManager = scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
+                    IList<ArticleListViewModel> articles = await articleManager.GetArticles();
+                    await this.SendMessage(connectionId, MessageType.GetArticles, articles);
                     break;
                 }
                 default:
