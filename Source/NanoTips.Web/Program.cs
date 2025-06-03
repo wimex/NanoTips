@@ -80,7 +80,7 @@ builder.Services.AddHangfireServer(options =>
 builder.Services.AddHangfire(config =>
 {
     MongoDbSettings settings = builder.Configuration.GetSection(MongoDbSettings.SectionName).Get<MongoDbSettings>();
-    string server = $"{settings.ConnectionUri}/{settings.DatabaseName}?authSource=admin";
+    string server = $"{settings.ConnectionUri}";
 
     config
         .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)

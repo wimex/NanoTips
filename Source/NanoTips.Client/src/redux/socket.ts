@@ -13,7 +13,7 @@ class WebSocketClass
         retryDelay: 3000,
     };
     
-    private url: string = 'http://localhost:5245/ws';
+    private url: string = import.meta.env.VITE_BACKEND_URL;
     private ws: WebSocket | null = null;
     
     private listeners = {
