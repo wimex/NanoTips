@@ -10,6 +10,8 @@ namespace NanoTips.Services.EmailResponder;
 
 public class EmailResponderService(ILogger<EmailResponderService> logger, IMongoDatabase database, IChatClientService chatClientService) : IEmailResponderService
 {
+    public static Action<string> MailSenderCallback { get; set; } = _ => { };
+    
     private const double DefaultProbabilityThreshold = 0.7;
     
     public async Task TryRespondingToMail(ObjectId mailboxId, ObjectId messageId)
@@ -71,6 +73,6 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
             .GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages)
             .InsertOneAsync(reply);
         
-        //TODO: send the reply via email or other channels as needed
+        MailSenderCallback.Invoke(reply.Id.ToString());
     }
 }

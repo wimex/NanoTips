@@ -46,7 +46,8 @@ builder.Services
 
 builder.Services
     .AddTransient<DataSaverJob>()
-    .AddTransient<DataCategorizerJob>();
+    .AddTransient<DataCategorizerJob>()
+    .AddTransient<MailSenderJob>();
 
 
 builder.Services.AddControllers();
@@ -88,6 +89,18 @@ builder.Services.AddHangfire(config =>
 });
 
 WebApplication app = builder.Build();
+EmailResponderService.MailSenderCallback = conversationMessageId =>
+{
+    ThreadPool.QueueUserWorkItem(_ =>
+    {
+        IServiceScope scope = app.Services.CreateScope();
+        IJobCancellationToken cancellationToken = new JobCancellationToken(false);
+        IBackgroundJobClient backgroundJobClient = scope.ServiceProvider.GetRequiredService<IBackgroundJobClient>();
+        MailSenderJob mailSenderJob = scope.ServiceProvider.GetRequiredService<MailSenderJob>();
+        backgroundJobClient.Enqueue(() => mailSenderJob.Execute(conversationMessageId, cancellationToken));
+    });
+}; 
+
 app.UseWebSockets();
 app.UseCors(options =>
 {

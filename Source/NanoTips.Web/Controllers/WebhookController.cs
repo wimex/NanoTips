@@ -35,9 +35,10 @@ public class WebhookController(ILogger<WebhookController> logger, IServiceProvid
 
         ThreadPool.QueueUserWorkItem(_ =>
         {
+            IServiceScope scope = serviceProvider.CreateScope();
             IJobCancellationToken cancellationToken = new JobCancellationToken(false);
-            DataSaverJob dataSaverJob = serviceProvider.GetRequiredService<DataSaverJob>();
-            DataCategorizerJob dataCategorizerJob = serviceProvider.GetRequiredService<DataCategorizerJob>();
+            DataSaverJob dataSaverJob = scope.ServiceProvider.GetRequiredService<DataSaverJob>();
+            DataCategorizerJob dataCategorizerJob = scope.ServiceProvider.GetRequiredService<DataCategorizerJob>();
 
             string dataSaverJobId = backgroundJobClient
                 .Enqueue(() => dataSaverJob.Execute(mailboxId, messageId.ToString(), data, cancellationToken));

@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using NanoTips.Data;
 using NanoTips.Data.Entities;
 using NanoTips.Data.Enums;
+using NanoTips.Services.EmailResponder;
 using NanoTips.Services.Models;
 
 namespace NanoTips.Services.ConversationManager;
@@ -42,6 +43,7 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
         };
         
         await messages.InsertOneAsync(message);
+        EmailResponderService.MailSenderCallback.Invoke(message.Id.ToString());
         
         return await this.GetConversation(model.ConversationId);
     }

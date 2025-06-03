@@ -9,6 +9,7 @@
     <ItemGroup>
       <PackageReference Include="Hangfire" Version="1.8.20" />
       <PackageReference Include="Hangfire.Dashboard.Management.v2" Version="2.3.2" />
+      <PackageReference Include="Postmark" Version="5.2.0" />
     </ItemGroup>
 
     <ItemGroup>
