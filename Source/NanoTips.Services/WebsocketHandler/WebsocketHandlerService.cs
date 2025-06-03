@@ -121,6 +121,14 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                     await this.SendMessage(connectionId, MessageType.GetArticle, article);
                     break;
                 }
+                case MessageType.ReplyConversation:
+                {
+                    WebsocketEnvelopeModel<ConversationEditorModel> request = envelope.To<ConversationEditorModel>();
+                    IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
+                    ConversationViewModel conversation = await conversationManager.ReplyToConversation(request.Content);
+                    await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
+                    break;
+                }
                 default:
                     logger.LogError($"Received unsupported message type: {envelope.Type}");
                     return;

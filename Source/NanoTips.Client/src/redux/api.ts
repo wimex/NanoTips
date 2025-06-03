@@ -1,12 +1,22 @@
 import {createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 import {ws} from "@/redux/socket.ts";
-import type {ConversationListModel, ConversationViewModel} from "@/models/conversations.model.tsx";
+import type {
+    ConversationEditorModel,
+    ConversationListModel,
+    ConversationViewModel
+} from "@/models/conversations.model.tsx";
 import {messageTypes} from "@/models/socket.models.ts";
 import type {ArticleEditorModel, ArticleListViewModel, ArticleViewModel} from "@/models/articles.model.tsx";
 
 export const api = createApi({
     baseQuery: fetchBaseQuery({baseUrl: '/'}),
     endpoints: (builder) => ({
+        replyConversation: builder.mutation<{}, ConversationEditorModel>({
+            queryFn(conversation) {
+                ws.sendMessage(messageTypes.replyConversation, conversation);
+                return { data: {} };
+            },
+        }),
         editArticle: builder.mutation<{}, ArticleEditorModel>({
             queryFn(article) {
                 ws.sendMessage(messageTypes.editArticle, article);
@@ -128,4 +138,5 @@ export const {
     useGetArticlesQuery,
     useGetArticleQuery,
     useEditArticleMutation,
+    useReplyConversationMutation,
 } = api;

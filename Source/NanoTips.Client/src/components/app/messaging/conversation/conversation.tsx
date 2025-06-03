@@ -1,13 +1,24 @@
-import {useGetConversationQuery} from "@/redux/api.ts";
+import {useGetConversationQuery, useReplyConversationMutation} from "@/redux/api.ts";
 import {ArrowBottomRightIcon, ArrowTopRightIcon} from "@radix-ui/react-icons";
 import type {CategorySuggestionViewModel} from "@/models/conversations.model.tsx";
 
 export default function Conversation({ conversationId, onCategorySelected }: { conversationId: string, onCategorySelected: (categorySlug: string) => void }) {
+    const [ replyConversation ] = useReplyConversationMutation();
     const getConversation = useGetConversationQuery(conversationId, { refetchOnMountOrArgChange: true  });
     
     async function answerWithArticle(category: CategorySuggestionViewModel) {
         if(!category.exists) {
             onCategorySelected(category.categorySlug);
+        } else {
+            if(!getConversation.data?.conversationId) {
+                console.error("No conversation ID available to reply to.");
+                return;
+            }
+            
+            replyConversation({
+                conversationId: getConversation.data.conversationId,
+                articleSlug: category.categorySlug
+            });
         }
     }
     

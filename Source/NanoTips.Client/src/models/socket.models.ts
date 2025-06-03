@@ -1,4 +1,5 @@
 import type {
+    ConversationEditorModel,
     ConversationListModel,
     ConversationViewModel
 } from "@/models/conversations.model.tsx";
@@ -12,6 +13,7 @@ export const messageTypes = {
     getArticles: 'getArticles',
     getArticle: 'getArticle',
     editArticle: 'editArticle',
+    replyConversation: 'replyConversation',
 } as const;
 
 // Acts as a union type for all possible message types.
@@ -25,6 +27,7 @@ export type DataType<T extends MessageType> =
     T extends typeof messageTypes.getConversation ? ConversationViewModel :
     T extends typeof messageTypes.getArticles ? ArticleListViewModel[] :
     T extends typeof messageTypes.editArticle ? ArticleEditorModel :
+    T extends typeof messageTypes.replyConversation ? ConversationEditorModel :
     never;
 
 // Defines a callback type that takes data of the specified message type as an argument.

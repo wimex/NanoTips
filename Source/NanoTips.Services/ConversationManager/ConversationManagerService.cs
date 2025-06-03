@@ -9,6 +9,42 @@ namespace NanoTips.Services.ConversationManager;
 
 public class ConversationManagerService(IMongoDatabase database) : IConversationManagerService
 {
+    public async Task<ConversationViewModel> ReplyToConversation(ConversationEditorModel model)
+    {
+        ObjectId conversationId = ObjectId.Parse(model.ConversationId);
+        
+        IMongoCollection<ConversationMessage> messages = database.GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages);
+        IMongoCollection<KnowledgeBaseArticle> articles = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
+        
+        KnowledgeBaseArticle? article = await articles.Find(a => a.Slug == model.ArticleSlug).FirstOrDefaultAsync();
+        if (article == null)
+            throw new KeyNotFoundException($"Knowledge base article with slug '{model.ArticleSlug}' not found.");
+
+        ConversationMessage last = await messages
+            .Find(c => c.ConversationId == conversationId && c.Direction == MessageDirection.Incoming)
+            .SortByDescending(c => c.Created)
+            .FirstOrDefaultAsync();
+        
+        ConversationMessage message = new()
+        {
+            Id = ObjectId.GenerateNewId(),
+            ConversationId = conversationId,
+            Created = DateTime.UtcNow,
+            Processed = null,
+            Direction = MessageDirection.Outgoing,
+            Sender = "NanoTips",
+            Recipient = last.Sender,
+            Subject = last.Subject,
+            Body = article.Body,
+            CategorySuggestions = new(),
+            CategoryId = article.Slug,
+        };
+        
+        await messages.InsertOneAsync(message);
+        
+        return await this.GetConversation(model.ConversationId);
+    }
+    
     public async Task<ConversationViewModel> GetConversation(string conversationId)
     {
         if (!ObjectId.TryParse(conversationId, out ObjectId parsedConversationId)) throw new ArgumentException("Invalid conversation ID format.", nameof(conversationId));

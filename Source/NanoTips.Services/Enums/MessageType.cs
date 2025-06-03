@@ -28,4 +28,8 @@ public enum MessageType
     [EnumMember(Value = "editArticle")]
     [JsonStringEnumMemberName("editArticle")]
     EditArticle = 5,
+    
+    [EnumMember(Value = "replyConversation")]
+    [JsonStringEnumMemberName("replyConversation")]
+    ReplyConversation = 6,
 }

@@ -38,4 +38,9 @@ export type CategorySuggestionViewModel = {
     exists: boolean;
 };
 
+export type ConversationEditorModel = {
+    conversationId: string;
+    articleSlug: string;
+}
+
 export type MessageDirection = 'incoming' | 'outgoing';
