@@ -7,10 +7,18 @@ import type {
 } from "@/models/conversations.model.tsx";
 import {messageTypes} from "@/models/socket.models.ts";
 import type {ArticleEditorModel, ArticleListViewModel, ArticleViewModel} from "@/models/articles.model.tsx";
+import type {MailboxEditorModel, MailboxViewModel} from "@/models/mailbox.models.ts";
 
 export const api = createApi({
-    baseQuery: fetchBaseQuery({baseUrl: '/'}),
+    baseQuery: fetchBaseQuery({baseUrl: import.meta.env.VITE_BACKEND_URL}),
     endpoints: (builder) => ({
+        createMailbox: builder.mutation<MailboxViewModel, MailboxEditorModel>({
+            query: (mailbox) => ({
+                url: '/auth/register',
+                method: 'POST',
+                body: mailbox,
+            }),
+        }),
         replyConversation: builder.mutation<{}, ConversationEditorModel>({
             queryFn(conversation) {
                 ws.sendMessage(messageTypes.replyConversation, conversation);
@@ -139,4 +147,5 @@ export const {
     useGetArticleQuery,
     useEditArticleMutation,
     useReplyConversationMutation,
+    useCreateMailboxMutation,
 } = api;

@@ -7,6 +7,7 @@ using NanoTips.Jobs.Webhook;
 using NanoTips.Services.ArticleManager;
 using NanoTips.Services.ConversationManager;
 using NanoTips.Services.EmailResponder;
+using NanoTips.Services.MailboxManager;
 using NanoTips.Services.OpenAi;
 using NanoTips.Services.WebhookData;
 using NanoTips.Services.WebsocketHandler;
@@ -40,7 +41,8 @@ builder.Services
     .AddTransient<IEmailResponderService, EmailResponderService>()
     .AddTransient<IWebsocketHandlerService, WebsocketHandlerService>()
     .AddTransient<IConversationManagerService, ConversationManagerService>()
-    .AddTransient<IArticleManagerService, ArticleManagerService>();
+    .AddTransient<IArticleManagerService, ArticleManagerService>()
+    .AddTransient<IMailboxManagerService, MailboxManagerService>();
 
 builder.Services
     .AddTransient<DataSaverJob>()
@@ -97,6 +99,13 @@ builder.Services.AddHangfire(config =>
 
 WebApplication app = builder.Build();
 app.UseWebSockets();
+app.UseCors(options =>
+{
+    options
+        .AllowAnyOrigin()
+        .AllowAnyMethod()
+        .AllowAnyHeader();
+});
 
 
 app.UseHangfireServer();
