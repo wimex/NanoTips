@@ -4,5 +4,5 @@ namespace NanoTips.Services.EmailResponder;
 
 public interface IEmailResponderService
 {
-    Task TryRespondingToMail(ObjectId messageId);
+    Task TryRespondingToMail(ObjectId mailboxId, ObjectId messageId);
 }

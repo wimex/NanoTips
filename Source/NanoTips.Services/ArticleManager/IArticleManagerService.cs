@@ -7,7 +7,7 @@ namespace NanoTips.Services.ArticleManager;
 
 public interface IArticleManagerService
 {
-    Task<ArticleViewModel> CreateOrEditArticle(ArticleEditorModel model);
+    Task<ArticleViewModel> CreateOrEditArticle(string mailboxId, ArticleEditorModel model);
     Task<ArticleViewModel> GetArticle(string articleId);
-    Task<IList<ArticleListViewModel>> GetArticles();
+    Task<IList<ArticleListViewModel>> GetArticles(string mailboxId);
 }

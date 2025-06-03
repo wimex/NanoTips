@@ -28,7 +28,7 @@ public class WebhookDataService(IMongoDatabase database) : IWebhookDataService
         await messages.InsertOneAsync(document);
     }
     
-    public async Task CreateConversationFromMessage(ObjectId webhookMessageId, ObjectId conversationId, ObjectId conversationMessageId)
+    public async Task CreateConversationFromMessage(ObjectId mailboxId, ObjectId webhookMessageId, ObjectId conversationId, ObjectId conversationMessageId)
     {
         IMongoCollection<BsonDocument> messages = database.GetCollection<BsonDocument>(NanoTipsCollections.WebhookMessages);
         IMongoCollection<ConversationMessage> conversations = database.GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages);
@@ -50,6 +50,7 @@ public class WebhookDataService(IMongoDatabase database) : IWebhookDataService
         ConversationMessage conversation = new ConversationMessage
         {
             Id = conversationMessageId,
+            MailboxId = mailboxId,
             ConversationId = conversationId,
             Created = DateTime.UtcNow,
             Direction = MessageDirection.Incoming,

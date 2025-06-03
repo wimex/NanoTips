@@ -20,9 +20,9 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
     
     private static ConcurrentDictionary<string, WebSocket> Connections { get; } = new();
 
-    public async Task SendMessageToAll<TMessage>(MessageType type, TMessage content)
+    public async Task SendMessageToAll<TMessage>(string mailboxId, MessageType type, TMessage content)
     {
-        IList<string> connectionIds = Connections.Keys.ToList();
+        IList<string> connectionIds = Connections.Keys.ToList().Where(s => s.StartsWith(mailboxId)).ToList();
         foreach (string connectionId in connectionIds)
         {
             try
@@ -38,16 +38,17 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
     }
 
 
-    public async Task AcceptConnection(WebSocket socket)
+    public async Task AcceptConnection(string mailboxId, WebSocket socket)
     {
         string connectionId = Guid.NewGuid().ToString();
-        Connections.TryAdd(connectionId, socket);
-        await this.ManageConnection(connectionId);
+        string websocketId = $"{mailboxId}---{connectionId}";
+        Connections.TryAdd(websocketId, socket);
+        await this.ManageConnection(websocketId);
     }
     
-    private async Task ManageConnection(string connectionId)
+    private async Task ManageConnection(string websocketId)
     {
-        if (!Connections.TryGetValue(connectionId, out WebSocket socket))
+        if (!Connections.TryGetValue(websocketId, out WebSocket socket))
             throw new InvalidOperationException("Unable to locate connection");
         
         byte[] buffer = new byte[1024 * 4];
@@ -59,11 +60,11 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
             closed = result.CloseStatus.HasValue;
             
             string message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
-            await this.ReceiveMessage(connectionId, message);
+            await this.ReceiveMessage(websocketId, message);
         }
 
         await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-        Connections.TryRemove(connectionId, out WebSocket _);
+        Connections.TryRemove(websocketId, out WebSocket _);
     }
     
     private async Task ReceiveMessage(string connectionId, string content)
@@ -71,14 +72,16 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
         _ = Task.Run(async () =>
         {
             using IServiceScope scope = serviceProvider.CreateScope();
+            
             WebsocketEnvelopeModel envelope = JsonSerializer.Deserialize<WebsocketEnvelopeModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
+            string mailboxId = connectionId.Split("---")[0];
             
             switch (envelope.Type)
             {
                 case MessageType.GetConversations:
                 {
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-                    IList<ConversationListModel> conversations = await conversationManager.GetConversations();
+                    IList<ConversationListModel> conversations = await conversationManager.GetConversations(mailboxId);
                     await this.SendMessage(connectionId, MessageType.GetConversations, conversations);
                     break;
                 }
@@ -93,7 +96,7 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                 case MessageType.GetArticles:
                 {
                     IArticleManagerService articleManager = scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
-                    IList<ArticleListViewModel> articles = await articleManager.GetArticles();
+                    IList<ArticleListViewModel> articles = await articleManager.GetArticles(mailboxId);
                     await this.SendMessage(connectionId, MessageType.GetArticles, articles);
                     break;
                 }
@@ -109,7 +112,7 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                 {
                     WebsocketEnvelopeModel<ArticleEditorModel> request = envelope.To<ArticleEditorModel>();
                     IArticleManagerService articleManager = scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
-                    ArticleViewModel article = await articleManager.CreateOrEditArticle(request.Content);
+                    ArticleViewModel article = await articleManager.CreateOrEditArticle(mailboxId, request.Content);
                     ArticleListViewModel list = new()
                     {
                         ArticleId = article.ArticleId,
@@ -125,7 +128,7 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
                 {
                     WebsocketEnvelopeModel<ConversationEditorModel> request = envelope.To<ConversationEditorModel>();
                     IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-                    ConversationViewModel conversation = await conversationManager.ReplyToConversation(request.Content);
+                    ConversationViewModel conversation = await conversationManager.ReplyToConversation(mailboxId, request.Content);
                     await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
                     break;
                 }

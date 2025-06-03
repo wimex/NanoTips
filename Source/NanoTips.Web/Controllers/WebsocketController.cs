@@ -6,8 +6,8 @@ namespace NanoTips.Web.Controllers;
 
 public class WebsocketController(IWebsocketHandlerService websocketHandlerService) : ControllerBase
 {
-    [Route("/ws")]
-    public async Task Get()
+    [Route("/ws/{mailboxId}")]
+    public async Task Get([FromRoute] string mailboxId)
     {
         if (!this.HttpContext.WebSockets.IsWebSocketRequest)
         {
@@ -16,7 +16,7 @@ public class WebsocketController(IWebsocketHandlerService websocketHandlerServic
         else
         {
             WebSocket socket = await this.HttpContext.WebSockets.AcceptWebSocketAsync();
-            await websocketHandlerService.AcceptConnection(socket);
+            await websocketHandlerService.AcceptConnection(mailboxId, socket);
         }
     }
 }

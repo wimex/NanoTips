@@ -17,5 +17,5 @@ public interface IWebhookDataService
     /// <param name="conversationId"></param>
     /// <param name="conversationMessageId"></param>
     /// <returns></returns>
-    Task CreateConversationFromMessage(ObjectId webhookMessageId, ObjectId conversationId, ObjectId conversationMessageId);
+    Task CreateConversationFromMessage(ObjectId mailboxId, ObjectId webhookMessageId, ObjectId conversationId, ObjectId conversationMessageId);
 }

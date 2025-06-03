@@ -5,6 +5,6 @@ namespace NanoTips.Services.WebsocketHandler;
 
 public interface IWebsocketHandlerService
 {
-    Task SendMessageToAll<TMessage>(MessageType type, TMessage content);
-    Task AcceptConnection(WebSocket socket);
+    Task SendMessageToAll<TMessage>(string mailboxId, MessageType type, TMessage content);
+    Task AcceptConnection(string mailboxId, WebSocket socket);
 }

@@ -8,18 +8,18 @@ namespace NanoTips.Services.ArticleManager;
 
 public class ArticleManagerService(IMongoDatabase database) : IArticleManagerService
 {
-    public async Task<ArticleViewModel> CreateOrEditArticle(ArticleEditorModel model)
+    public async Task<ArticleViewModel> CreateOrEditArticle(string mailboxId, ArticleEditorModel model)
     {
         ArgumentNullException.ThrowIfNull(model);
 
-        IMongoCollection<KnowledgeBaseArticle> collection =
-            database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
+        IMongoCollection<KnowledgeBaseArticle> collection = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
         if (model.ArticleId == null)
         {
             ObjectId articleId = ObjectId.GenerateNewId();
             await collection.InsertOneAsync(new KnowledgeBaseArticle
             {
                 Id = articleId,
+                MailboxId = ObjectId.Parse(mailboxId),
                 Slug = model.Slug,
                 Title = model.Title,
                 Body = model.Content,
@@ -41,6 +41,7 @@ public class ArticleManagerService(IMongoDatabase database) : IArticleManagerSer
                 new KnowledgeBaseArticle
                 {
                     Id = articleId,
+                    MailboxId = ObjectId.Parse(mailboxId),
                     Slug = model.Slug,
                     Title = model.Title,
                     Body = model.Content,
@@ -74,10 +75,13 @@ public class ArticleManagerService(IMongoDatabase database) : IArticleManagerSer
         };
     }
     
-    public async Task<IList<ArticleListViewModel>> GetArticles()
+    public async Task<IList<ArticleListViewModel>> GetArticles(string mailboxId)
     {
         IMongoCollection<KnowledgeBaseArticle> collection = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
-        List<KnowledgeBaseArticle> articles = await collection.Find(FilterDefinition<KnowledgeBaseArticle>.Empty).ToListAsync();
+        List<KnowledgeBaseArticle> articles = await collection.Find(x => x.MailboxId == ObjectId.Parse(mailboxId))
+            .SortBy(x => x.Title)
+            .ToListAsync();
+        
         return articles.Select(x => new ArticleListViewModel
         {
             ArticleId = x.Id.ToString(),

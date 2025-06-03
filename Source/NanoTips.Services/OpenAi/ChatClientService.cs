@@ -12,14 +12,14 @@ namespace NanoTips.Services.OpenAi;
 //TODO: add a message length limit
 public class ChatClientService(ILogger<ChatClientService> logger, IMongoDatabase database, ChatClient client) : IChatClientService
 {
-    public async Task<Dictionary<string, double>> GetEmailCategory(string content)
+    public async Task<Dictionary<string, double>> GetEmailCategory(string mailboxId, string content)
     {
         Dictionary<string, double> empty = new();
 
         logger.LogInformation("Processing message for categorization ({length} characters)", content.Length);
         List<string> categories = await database
             .GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles)
-            .Find(FilterDefinition<KnowledgeBaseArticle>.Empty)
+            .Find(article => article.MailboxId == ObjectId.Parse(mailboxId) && !string.IsNullOrEmpty(article.Slug))
             .Project(article => article.Slug)
             .ToListAsync();
 

@@ -9,14 +9,14 @@ namespace NanoTips.Services.ConversationManager;
 
 public class ConversationManagerService(IMongoDatabase database) : IConversationManagerService
 {
-    public async Task<ConversationViewModel> ReplyToConversation(ConversationEditorModel model)
+    public async Task<ConversationViewModel> ReplyToConversation(string mailboxId, ConversationEditorModel model)
     {
         ObjectId conversationId = ObjectId.Parse(model.ConversationId);
         
         IMongoCollection<ConversationMessage> messages = database.GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages);
         IMongoCollection<KnowledgeBaseArticle> articles = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
         
-        KnowledgeBaseArticle? article = await articles.Find(a => a.Slug == model.ArticleSlug).FirstOrDefaultAsync();
+        KnowledgeBaseArticle? article = await articles.Find(a => a.MailboxId == ObjectId.Parse(mailboxId) && a.Slug == model.ArticleSlug).FirstOrDefaultAsync();
         if (article == null)
             throw new KeyNotFoundException($"Knowledge base article with slug '{model.ArticleSlug}' not found.");
 
@@ -28,6 +28,7 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
         ConversationMessage message = new()
         {
             Id = ObjectId.GenerateNewId(),
+            MailboxId = last.MailboxId,
             ConversationId = conversationId,
             Created = DateTime.UtcNow,
             Processed = null,
@@ -63,9 +64,14 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
             .Distinct()
             .ToList();
         
+        List<ObjectId> mailboxIds = messages
+            .Select(m => m.MailboxId)
+            .Distinct()
+            .ToList();
+        
         IMongoCollection<KnowledgeBaseArticle> kbCollection = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
         List<KnowledgeBaseArticle>? suggestions = await kbCollection
-            .Find(k => suggestionIds.Contains(k.Slug.ToString()))
+            .Find(k => mailboxIds.Contains(k.MailboxId) && suggestionIds.Contains(k.Slug.ToString()))
             .ToListAsync();
         
         ConversationViewModel conversation = new()
@@ -95,11 +101,12 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
         return conversation;
     }
     
-    public async Task<IList<ConversationListModel>> GetConversations()
+    public async Task<IList<ConversationListModel>> GetConversations(string mailboxId)
     {
         IMongoCollection<ConversationMessage> collection = database.GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages);
         var conversations = await collection
             .Aggregate()
+            .Match(c => c.MailboxId == ObjectId.Parse(mailboxId))
             .Group(c => c.ConversationId, g => new ConversationListModel
             {
                 ConversationId = g.Key.ToString(),

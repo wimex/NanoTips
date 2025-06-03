@@ -20,7 +20,7 @@ public class DataCategorizerJob(IServiceProvider serviceProvider) : IJob
     [Description("Creates threads from incoming messages and tries to categorize them based on their content.")]
     [DisableConcurrentExecution(30)]
     [AutomaticRetry(Attempts = 0)]
-    public async Task Execute(string webhookMessageId, string conversationId, string conversationMessageId, IJobCancellationToken cancellation)
+    public async Task Execute(string mailboxId, string webhookMessageId, string conversationId, string conversationMessageId, IJobCancellationToken cancellation)
     {
         ArgumentNullException.ThrowIfNull(webhookMessageId);
         ArgumentNullException.ThrowIfNull(conversationId);
@@ -34,14 +34,14 @@ public class DataCategorizerJob(IServiceProvider serviceProvider) : IJob
         IWebsocketHandlerService websocketHandlerService = serviceProvider.GetRequiredService<IWebsocketHandlerService>();
 
         logger.LogInformation("Starting categorization for webhook message {WebhookMessageId} to conversation {ConversationId}", webhookMessageId, conversationId);
-        await webhookDataService.CreateConversationFromMessage(ObjectId.Parse(webhookMessageId), ObjectId.Parse(conversationId), ObjectId.Parse(conversationMessageId));
+        await webhookDataService.CreateConversationFromMessage(ObjectId.Parse(mailboxId), ObjectId.Parse(webhookMessageId), ObjectId.Parse(conversationId), ObjectId.Parse(conversationMessageId));
         
         logger.LogInformation("Created conversation message {ConversationMessageId} for webhook message {WebhookMessageId}", conversationMessageId, webhookMessageId);
-        await emailResponderService.TryRespondingToMail(ObjectId.Parse(conversationMessageId));
+        await emailResponderService.TryRespondingToMail(ObjectId.Parse(mailboxId), ObjectId.Parse(conversationMessageId));
         
-        IList<ConversationListModel> conversations = await conversationManagerService.GetConversations();
+        IList<ConversationListModel> conversations = await conversationManagerService.GetConversations(mailboxId);
         ConversationViewModel conversation = await conversationManagerService.GetConversation(conversationId);
-        await websocketHandlerService.SendMessageToAll(MessageType.GetConversations, conversations);
-        await websocketHandlerService.SendMessageToAll(MessageType.GetConversation, conversation);
+        await websocketHandlerService.SendMessageToAll(mailboxId, MessageType.GetConversations, conversations);
+        await websocketHandlerService.SendMessageToAll(mailboxId, MessageType.GetConversation, conversation);
     }
 }

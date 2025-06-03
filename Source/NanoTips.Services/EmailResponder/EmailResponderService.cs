@@ -12,7 +12,7 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
 {
     private const double DefaultProbabilityThreshold = 0.7;
     
-    public async Task TryRespondingToMail(ObjectId messageId)
+    public async Task TryRespondingToMail(ObjectId mailboxId, ObjectId messageId)
     {
         ConversationMessage? message = await database
             .GetCollection<ConversationMessage>(NanoTipsCollections.ConversationMessages)
@@ -22,7 +22,7 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
         if (message is null || string.IsNullOrEmpty(message.Body))
             throw new InvalidOperationException($"Message with ID {messageId} was not found or has no content.");
         
-        Dictionary<string, double> categories = await chatClientService.GetEmailCategory(message.Body);
+        Dictionary<string, double> categories = await chatClientService.GetEmailCategory(mailboxId.ToString(), message.Body);
         string? category = categories
             .Where(c => c.Value >= DefaultProbabilityThreshold)
             .OrderByDescending(c => c.Value)
@@ -43,7 +43,7 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
         logger.LogInformation("Category '{Category}' selected for message {MessageId} with probability {Probability}.", category, messageId, categories[category]);
         KnowledgeBaseArticle? article = await database
             .GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles)
-            .Find(article => article.Slug == category)
+            .Find(article => article.MailboxId == mailboxId && article.Slug == category)
             .FirstOrDefaultAsync();
 
         if (article is null || string.IsNullOrEmpty(article.Body))
@@ -55,6 +55,7 @@ public class EmailResponderService(ILogger<EmailResponderService> logger, IMongo
         ConversationMessage reply = new()
         {
             Id = ObjectId.GenerateNewId(),
+            MailboxId = message.MailboxId,
             ConversationId = message.ConversationId,
             Created = DateTime.UtcNow,
             Direction = MessageDirection.Outgoing,

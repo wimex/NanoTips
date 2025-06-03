@@ -104,7 +104,13 @@ class WebSocketClass
     }
     
     public initialize(watchdog: boolean): void {
-        this.ws = new WebSocket(this.url);
+        const mailbox = window.location.pathname.split('/')[1];
+        if(!mailbox) {
+            console.warn('No mailbox found in URL, cannot initialize WebSocket');
+            return;
+        }
+        
+        this.ws = new WebSocket(`${this.url}/${mailbox}`);
         
         if(!watchdog)
             this.watchdog();

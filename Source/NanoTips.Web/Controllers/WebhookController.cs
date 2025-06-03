@@ -15,8 +15,8 @@ public class WebhookController(ILogger<WebhookController> logger, IServiceProvid
     /// Saves the incoming webhook data to the database and kicks off any necessary processing.
     /// </summary>
     /// <returns></returns>
-    [HttpPost]
-    public async Task<ActionResult> Index()
+    [HttpPost("{mailboxId}")]
+    public async Task<ActionResult> Index([FromRoute] string mailboxId)
     {
         //TODO: Authorize incoming webhook requests
         if (!this.Request.ContentType.Contains("json", StringComparison.OrdinalIgnoreCase))
@@ -43,7 +43,7 @@ public class WebhookController(ILogger<WebhookController> logger, IServiceProvid
                 .Enqueue(() => dataSaverJob.Execute(messageId.ToString(), data, cancellationToken));
 
             string dataCategorizerJobId = backgroundJobClient
-                .ContinueJobWith(dataSaverJobId, () => dataCategorizerJob.Execute(messageId.ToString(), threadId.ToString(), conversationId.ToString(), cancellationToken), JobContinuationOptions.OnlyOnSucceededState);
+                .ContinueJobWith(dataSaverJobId, () => dataCategorizerJob.Execute(mailboxId, messageId.ToString(), threadId.ToString(), conversationId.ToString(), cancellationToken), JobContinuationOptions.OnlyOnSucceededState);
 
             logger.LogInformation("Incoming message processing started: {DataSaverJobId} => {DataCategorizerJobId}", dataSaverJobId, dataCategorizerJobId);
         });

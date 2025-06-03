@@ -13,6 +13,9 @@ public record ConversationMessage
     [BsonRepresentation(BsonType.ObjectId)]
     public required ObjectId ConversationId { get; init; }
     
+    [BsonRepresentation(BsonType.ObjectId)]
+    public required ObjectId MailboxId { get; init; }
+    
     /// <summary>
     /// When the message was created or received through a webhook.
     /// </summary>
