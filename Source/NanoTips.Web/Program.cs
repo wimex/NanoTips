@@ -51,16 +51,6 @@ builder.Services
 
 builder.Services.AddControllers();
 
-builder.Services.AddTransient<ChatClient>(provider =>
-{
-    IConfiguration configuration = provider.GetRequiredService<IConfiguration>();
-    string? token = configuration["OPENAI_API_KEY"];
-    if (string.IsNullOrEmpty(token))
-        throw new InvalidOperationException("OpenAI API key is not configured.");
-
-    return new ChatClient("gpt-4o", token);
-});
-
 builder.Services.AddSingleton<MongoClient>(_ =>
 {
     MongoDbSettings settings = builder.Configuration.GetSection(MongoDbSettings.SectionName).Get<MongoDbSettings>();

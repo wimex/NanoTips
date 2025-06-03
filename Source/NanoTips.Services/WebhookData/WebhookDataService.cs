@@ -13,7 +13,7 @@ public class WebhookDataService(IMongoDatabase database) : IWebhookDataService
     /// Saves the incoming RAW webhook data to the database without any processing.
     /// </summary>
     /// <param name="data"></param>
-    public async Task SaveIncomingWebhookData(ObjectId id, string data)
+    public async Task SaveIncomingWebhookData(ObjectId mailboxId, ObjectId id, string data)
     {
         ArgumentNullException.ThrowIfNull(id);
         ArgumentException.ThrowIfNullOrEmpty(data);
@@ -24,6 +24,7 @@ public class WebhookDataService(IMongoDatabase database) : IWebhookDataService
 
         IMongoCollection<BsonDocument> messages = database.GetCollection<BsonDocument>(NanoTipsCollections.WebhookMessages);
         document["_id"] = id;
+        document["MailboxId"] = mailboxId;
         
         await messages.InsertOneAsync(document);
     }

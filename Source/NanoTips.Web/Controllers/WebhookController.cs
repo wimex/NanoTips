@@ -40,7 +40,7 @@ public class WebhookController(ILogger<WebhookController> logger, IServiceProvid
             DataCategorizerJob dataCategorizerJob = serviceProvider.GetRequiredService<DataCategorizerJob>();
 
             string dataSaverJobId = backgroundJobClient
-                .Enqueue(() => dataSaverJob.Execute(messageId.ToString(), data, cancellationToken));
+                .Enqueue(() => dataSaverJob.Execute(mailboxId, messageId.ToString(), data, cancellationToken));
 
             string dataCategorizerJobId = backgroundJobClient
                 .ContinueJobWith(dataSaverJobId, () => dataCategorizerJob.Execute(mailboxId, messageId.ToString(), threadId.ToString(), conversationId.ToString(), cancellationToken), JobContinuationOptions.OnlyOnSucceededState);

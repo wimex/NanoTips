@@ -10,11 +10,16 @@ using OpenAI.Chat;
 namespace NanoTips.Services.OpenAi;
 
 //TODO: add a message length limit
-public class ChatClientService(ILogger<ChatClientService> logger, IMongoDatabase database, ChatClient client) : IChatClientService
+public class ChatClientService(ILogger<ChatClientService> logger, IMongoDatabase database) : IChatClientService
 {
     public async Task<Dictionary<string, double>> GetEmailCategory(string mailboxId, string content)
     {
         Dictionary<string, double> empty = new();
+        
+        IMongoCollection<SystemMailbox> mailboxes = database.GetCollection<SystemMailbox>(NanoTipsCollections.SystemMailboxes);
+        SystemMailbox? mailbox = await mailboxes.Find(m => m.Id == ObjectId.Parse(mailboxId)).FirstOrDefaultAsync();
+        if (mailbox is null || string.IsNullOrEmpty(mailbox.OpenAiApiKey))
+            throw new InvalidOperationException($"Mailbox with ID {mailboxId} was not found.");
 
         logger.LogInformation("Processing message for categorization ({length} characters)", content.Length);
         List<string> categories = await database
@@ -27,7 +32,8 @@ public class ChatClientService(ILogger<ChatClientService> logger, IMongoDatabase
         string cats = string.Join(",", categories); //Meow
         string prompt = Prompt.Replace("{ids}", cats).Replace("{email}", content);
         
-        logger.LogInformation("Sending prompt to OpenAI");
+        logger.LogInformation("Sending prompt to OpenAI (using mailbox {MailboxId})", mailboxId);
+        ChatClient client = new ChatClient("gpt-4o", mailbox.OpenAiApiKey);
         ChatMessage message = ChatMessage.CreateUserMessage(prompt);
         ClientResult<ChatCompletion> result = await client.CompleteChatAsync([message], new ChatCompletionOptions
         {

@@ -8,7 +8,7 @@ public interface IWebhookDataService
     /// Saves the incoming RAW webhook data to the database without any processing.
     /// </summary>
     /// <param name="data"></param>
-    Task SaveIncomingWebhookData(ObjectId id, string data);
+    Task SaveIncomingWebhookData(ObjectId mailboxId, ObjectId id, string data);
 
     /// <summary>
     /// Creates a conversation message from an incoming webhook message.

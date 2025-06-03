@@ -13,13 +13,13 @@ public class DataSaverJob(IServiceProvider serviceProvider) : IJob
     [Description("Saves raw webhook data to the database.")]
     [DisableConcurrentExecution(30)]
     [AutomaticRetry(Attempts = 0)]
-    public async Task Execute(string messageId, string data, IJobCancellationToken cancellation)
+    public async Task Execute(string mailboxId, string messageId, string data, IJobCancellationToken cancellation)
     {
         ArgumentNullException.ThrowIfNull(messageId);
         ArgumentException.ThrowIfNullOrEmpty(data);
         ArgumentNullException.ThrowIfNull(cancellation);
 
         IWebhookDataService webhookDataService = serviceProvider.GetRequiredService<IWebhookDataService>();
-        await webhookDataService.SaveIncomingWebhookData(ObjectId.Parse(messageId), data);
+        await webhookDataService.SaveIncomingWebhookData(ObjectId.Parse(mailboxId), ObjectId.Parse(messageId), data);
     }
 }
