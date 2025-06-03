@@ -32,6 +32,7 @@ export type ConversationMessageViewModel = {
 
 export type CategorySuggestionViewModel = {
     categoryId: string;
+    categorySlug: string;
     title: string;
     confidence: number;
     exists: boolean;

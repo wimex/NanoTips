@@ -6,6 +6,12 @@ import Articles from "@/components/app/articles/articles.tsx";
 
 function App() {
     const [tab, setTab] = useState<string>('messages');
+    const [slug, setSlug] = useState<string | null>(null);
+    
+    function onCategorySelected(categoryId: string): void {
+        setTab('articles');
+        setSlug(categoryId);
+    }
     
     return (
         <div className={styles.container}>
@@ -15,7 +21,7 @@ function App() {
                 </div>
                 <div className={styles.menu}>
                     <div className={styles.tabs}>
-                        <Tabs defaultValue="messages" onValueChange={(v: string) => setTab(v)}>
+                        <Tabs defaultValue="messages" value={tab} onValueChange={(v: string) => setTab(v)}>
                             <TabsList>
                                 <TabsTrigger value="messages" className="text-lg">Messages</TabsTrigger>
                                 <TabsTrigger value="articles" className="text-lg">Articles</TabsTrigger>
@@ -25,8 +31,8 @@ function App() {
                 </div>
             </div>
             <div className={styles.content}>
-                {tab === 'messages' && (<Messaging />)}
-                {tab === 'articles' && (<Articles />)}
+                {tab === 'messages' && (<Messaging onCategorySelected={onCategorySelected} />)}
+                {tab === 'articles' && (<Articles selectedArticleSlug={slug} />)}
             </div>
         </div>
     )

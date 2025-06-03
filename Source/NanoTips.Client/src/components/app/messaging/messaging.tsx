@@ -3,7 +3,7 @@ import Conversation from "@/components/app/messaging/conversation/conversation.t
 import Conversations from "./conversations/conversations";
 import {useState} from "react";
 
-export default function Messaging() {
+export default function Messaging({ onCategorySelected }: { onCategorySelected: (categoryId: string) => void }) {
     const [conversationId, setConversationId] = useState<string | null>(null);
     
     return (
@@ -12,7 +12,7 @@ export default function Messaging() {
                 <Conversations onConversationIdChanged={setConversationId}/>
             </div>
             <div className={styles.main}>
-                {conversationId && <Conversation conversationId={conversationId}></Conversation>}
+                {conversationId && <Conversation onCategorySelected={onCategorySelected} conversationId={conversationId}></Conversation>}
             </div>
         </div>
     );

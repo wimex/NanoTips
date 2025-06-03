@@ -1,7 +1,7 @@
 import {useGetConversationsQuery} from "@/redux/api.ts";
 
 export default function Conversations({ onConversationIdChanged }: { onConversationIdChanged: (conversationId: string) => void }) {
-    const getConversations = useGetConversationsQuery();
+    const getConversations = useGetConversationsQuery(undefined, { refetchOnMountOrArgChange: true });
 
     return (<div>
         {getConversations.data?.map((conversation) => (

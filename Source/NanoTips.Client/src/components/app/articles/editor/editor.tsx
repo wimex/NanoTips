@@ -1,19 +1,25 @@
 import { useEditArticleMutation, useGetArticleQuery} from "@/redux/api.ts";
 import {type FormEvent, useEffect, useState} from "react";
 
-export default function Editor({ articleId, onArticleSelected }: { articleId: string, onArticleSelected: (articleId: string | null) => void }) {
+export default function Editor({ articleId, onArticleSelected, createFromSlug }: { articleId: string, onArticleSelected: (articleId: string | null) => void, createFromSlug: string | null }) {
     const [editArticleMutation] = useEditArticleMutation();
     const getArticleQuery = useGetArticleQuery(articleId, { skip: articleId === 'create-article' });
     
     const [title, setTitle] = useState('');
     const [slug, setSlug] = useState('');
     const [content, setContent] = useState('');
+    const [guessSlug, setGuessSlug] = useState<boolean>(true);
     
     useEffect(() => {
         setTitle('');
         setSlug('');
         setContent('');
     }, [articleId]);
+    
+    useEffect(() => {
+        setGuessSlug(createFromSlug !== null);
+        setSlug(createFromSlug || '');
+    }, [createFromSlug]);
     
     useEffect(() => {
         if (getArticleQuery.isLoading || !getArticleQuery.data || articleId === 'create-article')
@@ -27,6 +33,9 @@ export default function Editor({ articleId, onArticleSelected }: { articleId: st
     }, [getArticleQuery.isLoading, getArticleQuery.data]);
     
     function onTitleChanged(e: React.ChangeEvent<HTMLInputElement>) {
+        if(!guessSlug)
+            return;
+        
         const title = e.currentTarget.value;
         if (!title)
             return;

@@ -5,6 +5,7 @@ namespace NanoTips.Services.Models;
 public record CategorySuggestionViewModel
 {
     public required string CategoryId { get; init; }
+    public required string CategorySlug { get; init; }
     public required double Confidence { get; init; }
 
     public string? Title { get; init; }
@@ -18,6 +19,7 @@ public record CategorySuggestionViewModel
         return new CategorySuggestionViewModel
         {
             CategoryId = article.Id.ToString(),
+            CategorySlug = article.Slug,
             Title = article.Title,
             Confidence = confidence,
         };

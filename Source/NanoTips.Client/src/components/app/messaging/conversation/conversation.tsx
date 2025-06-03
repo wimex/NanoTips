@@ -1,10 +1,14 @@
 import {useGetConversationQuery} from "@/redux/api.ts";
 import {ArrowBottomRightIcon, ArrowTopRightIcon} from "@radix-ui/react-icons";
+import type {CategorySuggestionViewModel} from "@/models/conversations.model.tsx";
 
-export default function Conversation({ conversationId }: { conversationId: string }) {
-    const getConversation = useGetConversationQuery(conversationId);
+export default function Conversation({ conversationId, onCategorySelected }: { conversationId: string, onCategorySelected: (categorySlug: string) => void }) {
+    const getConversation = useGetConversationQuery(conversationId, { refetchOnMountOrArgChange: true  });
     
-    async function answerWithArticle(category: string) {
+    async function answerWithArticle(category: CategorySuggestionViewModel) {
+        if(!category.exists) {
+            onCategorySelected(category.categorySlug);
+        }
     }
     
     return (
@@ -26,9 +30,9 @@ export default function Conversation({ conversationId }: { conversationId: strin
                                             <li key={id} className="mt-1">
                                                 <button
                                                     className="text-blue-500 hover:underline"
-                                                    onClick={() => answerWithArticle(category.categoryId)}
+                                                    onClick={() => answerWithArticle(category)}
                                                 >
-                                                    {category.exists ? category.title : category.categoryId} ({(category.confidence * 100).toFixed(2)} %)
+                                                    {category.exists ? category.title : category.categorySlug} ({(category.confidence * 100).toFixed(2)} %)
                                                 </button>
                                             </li>
                                         ))}

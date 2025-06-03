@@ -2,7 +2,7 @@ import {useGetArticlesQuery} from "@/redux/api.ts";
 
 export default function List({onArticleSelected}: {onArticleSelected: (articleId: string) => void}) {
     const createArticle = 'create-article';
-    const getArticles = useGetArticlesQuery();
+    const getArticles = useGetArticlesQuery(undefined, {refetchOnMountOrArgChange: true});
     
     return (
         <div>

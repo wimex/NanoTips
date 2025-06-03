@@ -29,7 +29,7 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
         
         IMongoCollection<KnowledgeBaseArticle> kbCollection = database.GetCollection<KnowledgeBaseArticle>(NanoTipsCollections.KnowledgeBaseArticles);
         List<KnowledgeBaseArticle>? suggestions = await kbCollection
-            .Find(k => suggestionIds.Contains(k.Id.ToString()))
+            .Find(k => suggestionIds.Contains(k.Slug.ToString()))
             .ToListAsync();
         
         ConversationViewModel conversation = new()
@@ -49,8 +49,8 @@ public class ConversationManagerService(IMongoDatabase database) : IConversation
                 CategorySuggestions = m.CategorySuggestions.ToDictionary(
                     kvp => kvp.Key,
                     kvp => CategorySuggestionViewModel.FromKnowledgeBaseArticle( 
-                        suggestions.FirstOrDefault(s => s.Id.ToString() == kvp.Key), kvp.Value)
-                        ?? new CategorySuggestionViewModel{ CategoryId = kvp.Key, Title = null, Confidence = kvp.Value }
+                        suggestions.FirstOrDefault(s => s.Slug.ToString() == kvp.Key), kvp.Value)
+                        ?? new CategorySuggestionViewModel{ CategoryId = kvp.Key, CategorySlug = kvp.Key, Title = null, Confidence = kvp.Value }
                 ),
                 CategoryId = m.CategoryId,
             }).ToList()
