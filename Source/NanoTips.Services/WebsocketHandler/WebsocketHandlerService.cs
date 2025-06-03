@@ -56,103 +56,146 @@ public class WebsocketHandlerService(ILogger<WebsocketHandlerService> logger, IS
         
         while (!closed)
         {
-            WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-            closed = result.CloseStatus.HasValue;
-            
-            string message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
-            await this.ReceiveMessage(websocketId, message);
+            try
+            {
+                WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                closed = result.CloseStatus.HasValue;
+
+                string message = System.Text.Encoding.UTF8.GetString(buffer, 0, result.Count);
+                await this.ReceiveMessage(websocketId, message);
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error while managing websocket connection {WebsocketId}", websocketId);
+                closed = true;
+            }
         }
 
-        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
-        Connections.TryRemove(websocketId, out WebSocket _);
+        try
+        {
+            await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, CancellationToken.None);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error while closing websocket connection {WebsocketId}", websocketId);
+        }
+        finally
+        {
+            Connections.TryRemove(websocketId, out WebSocket _);
+        }
     }
     
     private async Task ReceiveMessage(string connectionId, string content)
     {
         _ = Task.Run(async () =>
         {
-            using IServiceScope scope = serviceProvider.CreateScope();
-            
-            WebsocketEnvelopeModel envelope = JsonSerializer.Deserialize<WebsocketEnvelopeModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
-            string mailboxId = connectionId.Split("---")[0];
-            
-            switch (envelope.Type)
+            try
             {
-                case MessageType.GetConversations:
-                {
-                    IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-                    IList<ConversationListModel> conversations = await conversationManager.GetConversations(mailboxId);
-                    await this.SendMessage(connectionId, MessageType.GetConversations, conversations);
-                    break;
-                }
-                case MessageType.GetConversation:
-                {
-                    WebsocketEnvelopeModel<ConversationViewModel> request = envelope.To<ConversationViewModel>();
-                    IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-                    ConversationViewModel conversation = await conversationManager.GetConversation(request.Content.ConversationId);
-                    await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
-                    break;
-                }
-                case MessageType.GetArticles:
-                {
-                    IArticleManagerService articleManager = scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
-                    IList<ArticleListViewModel> articles = await articleManager.GetArticles(mailboxId);
-                    await this.SendMessage(connectionId, MessageType.GetArticles, articles);
-                    break;
-                }
-                case MessageType.GetArticle:
-                {
-                    WebsocketEnvelopeModel<ArticleViewModel> request = envelope.To<ArticleViewModel>();
-                    IArticleManagerService articleManager = scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
-                    ArticleViewModel article = await articleManager.GetArticle(request.Content.ArticleId);
-                    await this.SendMessage(connectionId, MessageType.GetArticle, article);
-                    break;
-                }
-                case MessageType.EditArticle:
-                {
-                    WebsocketEnvelopeModel<ArticleEditorModel> request = envelope.To<ArticleEditorModel>();
-                    IArticleManagerService articleManager = scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
-                    ArticleViewModel article = await articleManager.CreateOrEditArticle(mailboxId, request.Content);
-                    ArticleListViewModel list = new()
-                    {
-                        ArticleId = article.ArticleId,
-                        Slug = article.Slug,
-                        Title = article.Title,
-                    };
+                using IServiceScope scope = serviceProvider.CreateScope();
 
-                    await this.SendMessage(connectionId, MessageType.GetArticles, new List<ArticleListViewModel> { list });
-                    await this.SendMessage(connectionId, MessageType.GetArticle, article);
-                    break;
-                }
-                case MessageType.ReplyConversation:
+                WebsocketEnvelopeModel envelope = JsonSerializer.Deserialize<WebsocketEnvelopeModel>(content, JsonOptions) ?? throw new InvalidOperationException("Invalid message format");
+                string mailboxId = connectionId.Split("---")[0];
+
+                switch (envelope.Type)
                 {
-                    WebsocketEnvelopeModel<ConversationEditorModel> request = envelope.To<ConversationEditorModel>();
-                    IConversationManagerService conversationManager = scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
-                    ConversationViewModel conversation = await conversationManager.ReplyToConversation(mailboxId, request.Content);
-                    await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
-                    break;
+                    case MessageType.GetConversations:
+                    {
+                        IConversationManagerService conversationManager =
+                            scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
+                        IList<ConversationListModel> conversations =
+                            await conversationManager.GetConversations(mailboxId);
+                        await this.SendMessage(connectionId, MessageType.GetConversations, conversations);
+                        break;
+                    }
+                    case MessageType.GetConversation:
+                    {
+                        WebsocketEnvelopeModel<ConversationViewModel> request = envelope.To<ConversationViewModel>();
+                        IConversationManagerService conversationManager =
+                            scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
+                        ConversationViewModel conversation =
+                            await conversationManager.GetConversation(request.Content.ConversationId);
+                        await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
+                        break;
+                    }
+                    case MessageType.GetArticles:
+                    {
+                        IArticleManagerService articleManager =
+                            scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
+                        IList<ArticleListViewModel> articles = await articleManager.GetArticles(mailboxId);
+                        await this.SendMessage(connectionId, MessageType.GetArticles, articles);
+                        break;
+                    }
+                    case MessageType.GetArticle:
+                    {
+                        WebsocketEnvelopeModel<ArticleViewModel> request = envelope.To<ArticleViewModel>();
+                        IArticleManagerService articleManager =
+                            scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
+                        ArticleViewModel article = await articleManager.GetArticle(request.Content.ArticleId);
+                        await this.SendMessage(connectionId, MessageType.GetArticle, article);
+                        break;
+                    }
+                    case MessageType.EditArticle:
+                    {
+                        WebsocketEnvelopeModel<ArticleEditorModel> request = envelope.To<ArticleEditorModel>();
+                        IArticleManagerService articleManager =
+                            scope.ServiceProvider.GetRequiredService<IArticleManagerService>();
+                        ArticleViewModel article = await articleManager.CreateOrEditArticle(mailboxId, request.Content);
+                        ArticleListViewModel list = new()
+                        {
+                            ArticleId = article.ArticleId,
+                            Slug = article.Slug,
+                            Title = article.Title,
+                        };
+
+                        await this.SendMessage(connectionId, MessageType.GetArticles,
+                            new List<ArticleListViewModel> { list });
+                        await this.SendMessage(connectionId, MessageType.GetArticle, article);
+                        break;
+                    }
+                    case MessageType.ReplyConversation:
+                    {
+                        WebsocketEnvelopeModel<ConversationEditorModel>
+                            request = envelope.To<ConversationEditorModel>();
+                        IConversationManagerService conversationManager =
+                            scope.ServiceProvider.GetRequiredService<IConversationManagerService>();
+                        ConversationViewModel conversation =
+                            await conversationManager.ReplyToConversation(mailboxId, request.Content);
+                        await this.SendMessage(connectionId, MessageType.GetConversation, conversation);
+                        break;
+                    }
+                    default:
+                        logger.LogError($"Received unsupported message type: {envelope.Type}");
+                        return;
                 }
-                default:
-                    logger.LogError($"Received unsupported message type: {envelope.Type}");
-                    return;
+            }
+            catch (Exception e)
+            {
+                logger.LogError(e, "Error while processing message for connection {ConnectionId}", connectionId);
             }
         });
     }
     
     private async Task SendMessage<T>(string connectionId, MessageType type, T content)
     {
-        if (!Connections.TryGetValue(connectionId, out WebSocket socket))
-            throw new InvalidOperationException("Unable to locate connection");
-
-        WebsocketEnvelopeModel envelope = new WebsocketEnvelopeModel
+        try
         {
-            Type = type,
-            Data = JsonSerializer.SerializeToNode(content, JsonOptions)
-        };
-        
-        string json = JsonSerializer.Serialize(envelope, JsonOptions);
-        byte[] buffer = System.Text.Encoding.UTF8.GetBytes(json);
-        
-        await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+            if (!Connections.TryGetValue(connectionId, out WebSocket socket))
+                throw new InvalidOperationException("Unable to locate connection");
+
+            WebsocketEnvelopeModel envelope = new WebsocketEnvelopeModel
+            {
+                Type = type,
+                Data = JsonSerializer.SerializeToNode(content, JsonOptions)
+            };
+
+            string json = JsonSerializer.Serialize(envelope, JsonOptions);
+            byte[] buffer = System.Text.Encoding.UTF8.GetBytes(json);
+
+            await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+        catch (Exception e)
+        {
+            logger.LogError(e, "Error while sending message to connection {ConnectionId}", connectionId);
+        }
     }
 }

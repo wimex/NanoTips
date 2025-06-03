@@ -7,8 +7,8 @@ import {
 class WebSocketClass
 {
     private keepAlive = {
-        checkInterval: 10000,
-        backoffPeriods: [1000, 1000, 2000, 5000, 10000, 10000, 30000, 60000],
+        checkInterval: 5000,
+        backoffPeriods: [1000, 1000, 2000, 5000, 10000],
         currentPeriod: 0,
         retryDelay: 3000,
     };
@@ -50,23 +50,33 @@ class WebSocketClass
     }
     
     private watchdog(): void {
+        console.log('WebSocket watchdog triggered');
         if (!this.ws) //Connection is closed, no need to keep alive
             return;
         
+        console.log('WebSocket watchdog triggered, current state:', this.ws.readyState);
         // Connection is in a healthy state
-        if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        if (this.ws.readyState === WebSocket.OPEN) {
             this.keepAlive.currentPeriod = 0;
             setTimeout(() => this.watchdog(), this.keepAlive.checkInterval);
             return;
         }
+        if( this.ws.readyState === WebSocket.CONNECTING) {
+            const period = Math.min(this.keepAlive.currentPeriod, this.keepAlive.backoffPeriods.length - 1);
+            const timeout = this.keepAlive.backoffPeriods[period];
+            setTimeout(() => this.watchdog(), timeout);
+            return;
+        }
         
         try {
+            console.warn('WebSocket connection is not open, attempting to reinitialize...');
             this.initialize(true);
         } finally {
-            const period = Math.max(this.keepAlive.currentPeriod, this.keepAlive.backoffPeriods.length - 1);
+            const period = Math.min(this.keepAlive.currentPeriod, this.keepAlive.backoffPeriods.length - 1);
             const timeout = this.keepAlive.backoffPeriods[period];
             this.keepAlive.currentPeriod++;
 
+            console.log(`Rescheduling watchdog: ${timeout}ms, current period: ${this.keepAlive.currentPeriod}`);
             setTimeout(() => this.watchdog(), timeout);
         }
     }
@@ -110,30 +120,33 @@ class WebSocketClass
             return;
         }
         
-        this.ws = new WebSocket(`${this.url}/${mailbox}`);
+        try {
+            this.ws = new WebSocket(`${this.url}/${mailbox}`);
+
+            this.ws.addEventListener('open', () => {
+                console.log('WebSocket connection opened');
+                this.callEventHandlers('open');
+            });
+
+            this.ws.addEventListener('message', (event) => {
+                console.log('WebSocket message received:', event.data);
+                this.callEventHandlers('message', event);
+            });
+
+            this.ws.addEventListener('close', () => {
+                this.callEventHandlers('close');
+            });
+
+            this.ws.addEventListener('error', (error) => {
+                this.callEventHandlers('error', error);
+                this.ws?.close();
+            });
+        } catch (error) {
+            console.error('Error initializing WebSocket:', error);
+        }
         
         if(!watchdog)
             this.watchdog();
-        
-        this.ws.addEventListener('open', () => {
-            console.log('WebSocket connection opened');
-            this.callEventHandlers('open');
-        });
-        
-        this.ws.addEventListener('message', (event) => {
-            console.log('WebSocket message received:', event.data);
-            this.callEventHandlers('message', event);
-        });
-        
-        this.ws.addEventListener('close', () => {
-            this.callEventHandlers('close');
-            this.ws = null;
-        });
-        
-        this.ws.addEventListener('error', (error) => {
-            this.callEventHandlers('error', error);
-            this.ws?.close();
-        });
     }
 }
 
