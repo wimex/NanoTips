@@ -7,4 +7,6 @@ public class SystemMailbox
     public required ObjectId Id { get; set; }
     
     public required string OpenAiApiKey { get; set; }
+    
+    public required string PostmarkApiKey { get; set; }
 }

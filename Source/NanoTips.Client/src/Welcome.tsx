@@ -18,9 +18,12 @@ export default function Welcome() {
 
       const formData = new FormData(event.currentTarget);
       const openAiApiKey = formData.get('openai') as string;
+      const postmarkApiKey = formData.get('postmark') as string;
+        if (!openAiApiKey || !postmarkApiKey)
+            return alert('Please enter both OpenAI and Postmark API keys');
 
       try {
-        const result = await createMailbox({openAiApiKey}).unwrap();
+        const result = await createMailbox({openAiApiKey, postmarkApiKey}).unwrap();
         console.log('Registration successful:', result);
         window.location.href = `/${result.mailboxId}`;
       } catch (error) {
@@ -48,6 +51,10 @@ export default function Welcome() {
           <div>
             <label className="block text-sm font-medium mb-1" htmlFor="openai">OpenAI API key</label>
             <input className="w-full p-2 border rounded" type="text" id="openai" name="openai" required />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1" htmlFor="postmark">Postmark API key</label>
+            <input className="w-full p-2 border rounded" type="text" id="postmark" name="postmark" required />
           </div>
           <button className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600" type="submit" disabled={isLoading}>Register</button>
             <p className="text-sm text-gray-500 mt-2">

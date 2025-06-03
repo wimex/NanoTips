@@ -12,12 +12,15 @@ public class MailboxManagerService(IMongoDatabase database) : IMailboxManagerSer
     {
         if (string.IsNullOrWhiteSpace(model.OpenAiApiKey))
             throw new ArgumentException("OpenAI API key cannot be null or empty.", nameof(model.OpenAiApiKey));
+        if (string.IsNullOrWhiteSpace(model.PostmarkApiKey))
+            throw new ArgumentException("Postmark API key cannot be null or empty.", nameof(model.PostmarkApiKey));
         
         IMongoCollection<SystemMailbox> collection = database.GetCollection<SystemMailbox>(NanoTipsCollections.SystemMailboxes);
         SystemMailbox mailbox = new()
         {
             Id = ObjectId.GenerateNewId(),
-            OpenAiApiKey = model.OpenAiApiKey
+            OpenAiApiKey = model.OpenAiApiKey,
+            PostmarkApiKey = model.PostmarkApiKey,
         };
         
         await collection.InsertOneAsync(mailbox);
