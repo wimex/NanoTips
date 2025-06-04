@@ -5,6 +5,7 @@
   grid-template-columns: 300px auto;
   grid-template-rows: 1fr;
   grid-template-areas: "sidebar main";
+  gap: 10px;
 
   .sidebar {
     grid-area: sidebar;

@@ -31,7 +31,7 @@ export default function Conversation({ conversationId, onCategorySelected }: { c
                         <p className="text-sm text-gray-500">{message.direction === 'incoming' ? <ArrowBottomRightIcon /> : <ArrowTopRightIcon />}</p>
                         <p className="text-sm text-gray-500">{new Date(message.created).toLocaleString()}</p>
                         <p className="font-semibold">{message.sender} to {message.recipient}</p>
-                        <p className="mt-2">{message.body}</p>
+                        <p className="mt-2" dangerouslySetInnerHTML={{__html: message.body}}></p>
                         {!message.handled && (
                             message.categorySuggestions && Object.keys(message.categorySuggestions).length > 0 && (
                                 <div className="mt-2">
