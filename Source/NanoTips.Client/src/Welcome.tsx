@@ -19,8 +19,12 @@ export default function Welcome() {
       const formData = new FormData(event.currentTarget);
       const openAiApiKey = formData.get('openai') as string;
       const postmarkApiKey = formData.get('postmark') as string;
-        if (!openAiApiKey || !postmarkApiKey)
-            return alert('Please enter both OpenAI and Postmark API keys');
+      if (!openAiApiKey || !postmarkApiKey)
+        return alert('Please enter both OpenAI and Postmark API keys');
+      if (openAiApiKey.length < 160 || !openAiApiKey.startsWith('sk-'))
+        return alert('This doesn\'t look like a valid OpenAI API key');
+      if (postmarkApiKey.length < 32)
+        return alert('This doesn\'t look like a valid Postmark API key');
 
       try {
         const result = await createMailbox({openAiApiKey, postmarkApiKey}).unwrap();
